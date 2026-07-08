@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { Session } from '@supabase/supabase-js';
 import { Sidebar } from './components/Sidebar';
 import { TopNav } from './components/TopNav';
 import { Dashboard } from './views/Dashboard';
@@ -9,16 +10,39 @@ import { Login } from './views/Login';
 import { ViewType, Vendor } from './types';
 import { VendorProvider, useVendors } from './contexts/VendorContext';
 import { VendorModal } from './components/VendorModal';
+import { supabase } from './lib/supabase';
 
 function AppContent() {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [session, setSession] = useState<Session | null>(null);
+  const [isCheckingSession, setIsCheckingSession] = useState(true);
   const [currentView, setCurrentView] = useState<ViewType>('dashboard');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isRequisitionModalOpen, setIsRequisitionModalOpen] = useState(false);
   const { addVendor } = useVendors();
 
-  if (!isAuthenticated) {
-    return <Login onLogin={() => setIsAuthenticated(true)} />;
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setIsCheckingSession(false);
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  if (isCheckingSession) {
+    return (
+      <div className="min-h-screen w-full flex items-center justify-center bg-surface-container-lowest">
+        <div className="h-8 w-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  if (!session) {
+    return <Login />;
   }
 
   const handleNewRequisition = () => {
@@ -68,7 +92,7 @@ function AppContent() {
         isOpen={isMobileMenuOpen}
         onClose={() => setIsMobileMenuOpen(false)}
         onNewRequisition={handleNewRequisition}
-        onLogout={() => setIsAuthenticated(false)}
+        onLogout={() => supabase.auth.signOut()}
       />
       
       <div className="flex-1 flex flex-col md:ml-[280px] min-w-0">

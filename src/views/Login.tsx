@@ -1,24 +1,25 @@
-import { useState } from 'react';
+import { useState, FormEvent } from 'react';
 import { Factory, Lock, Mail } from 'lucide-react';
 import { motion } from 'motion/react';
+import { supabase } from '../lib/supabase';
 
-interface LoginProps {
-  onLogin: () => void;
-}
-
-export function Login({ onLogin }: LoginProps) {
+export function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
+    setError('');
     setIsLoading(true);
-    // Simulate network request
-    setTimeout(() => {
-      setIsLoading(false);
-      onLogin();
-    }, 800);
+    const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
+    setIsLoading(false);
+    if (signInError) {
+      setError(signInError.message === 'Invalid login credentials'
+        ? 'Email atau password salah.'
+        : signInError.message);
+    }
   };
 
   return (
@@ -42,6 +43,12 @@ export function Login({ onLogin }: LoginProps) {
         </div>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-md w-full">
+          {error && (
+            <div className="px-md py-sm rounded-lg bg-error-container/50 text-on-error-container font-body-sm text-body-sm">
+              {error}
+            </div>
+          )}
+
           <div className="flex flex-col gap-xs w-full">
             <label className="font-label-md text-label-md text-on-surface w-full">Email Address</label>
             <div className="relative w-full">
@@ -60,12 +67,9 @@ export function Login({ onLogin }: LoginProps) {
           </div>
 
           <div className="flex flex-col gap-xs mb-sm w-full">
-            <div className="flex justify-between items-center w-full">
-              <label className="font-label-md text-label-md text-on-surface">
-                Password
-              </label>
-              <a href="#" className="text-primary hover:underline text-label-sm">Forgot password?</a>
-            </div>
+            <label className="font-label-md text-label-md text-on-surface">
+              Password
+            </label>
             <div className="relative w-full">
               <div className="absolute inset-y-0 left-0 pl-md flex items-center pointer-events-none text-on-surface-variant">
                 <Lock className="h-5 w-5" />
