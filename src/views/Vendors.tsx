@@ -44,7 +44,7 @@ export function Vendors() {
               id: `V-${Math.floor(10000 + Math.random() * 90000)}`,
               name: '', category: '', subCategory: '', phone: '', email: '', salesPerson: '',
               documents: { 'NIB': 'No', 'Akta Pendirian': 'No', 'Akta Pengesahan': 'No', 'NPWP': 'No', 'PKP': 'No', 'Non PKP': 'No', 'Sertifikat': 'No', 'Dokumen Pendukung': 'No', 'Registration Form RAJA': 'No' },
-              bankName: '', bankAccount: '', npwpNumber: '', nibAddress: '', correspAddress: '', remarks: '',
+              bankName: '', bankAccountName: '', bankAccount: '', npwpNumber: '', nibAddress: '', correspAddress: '', remarks: '',
               status: '', statusColor: '', dotColor: ''
             });
             setViewMode('add');
@@ -330,20 +330,30 @@ export function Vendors() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-md">
                   <div>
                     <label className="block font-label-md text-on-surface-variant mb-1">Nama Bank</label>
-                    <input 
-                      type="text" 
-                      className="w-full bg-surface-bright border border-outline-variant rounded-lg px-3 py-2 text-on-surface focus:border-secondary focus:ring-1 focus:ring-secondary outline-none transition-colors disabled:opacity-70 disabled:bg-surface-container" 
-                      value={selectedVendor.bankName} 
+                    <input
+                      type="text"
+                      className="w-full bg-surface-bright border border-outline-variant rounded-lg px-3 py-2 text-on-surface focus:border-secondary focus:ring-1 focus:ring-secondary outline-none transition-colors disabled:opacity-70 disabled:bg-surface-container"
+                      value={selectedVendor.bankName}
                       onChange={(e) => setSelectedVendor({ ...selectedVendor, bankName: e.target.value })}
                       disabled={viewMode === 'view'}
                     />
                   </div>
                   <div>
+                    <label className="block font-label-md text-on-surface-variant mb-1">Nama Pemilik Rekening</label>
+                    <input
+                      type="text"
+                      className="w-full bg-surface-bright border border-outline-variant rounded-lg px-3 py-2 text-on-surface focus:border-secondary focus:ring-1 focus:ring-secondary outline-none transition-colors disabled:opacity-70 disabled:bg-surface-container"
+                      value={selectedVendor.bankAccountName}
+                      onChange={(e) => setSelectedVendor({ ...selectedVendor, bankAccountName: e.target.value })}
+                      disabled={viewMode === 'view'}
+                    />
+                  </div>
+                  <div>
                     <label className="block font-label-md text-on-surface-variant mb-1">Nomor Rekening</label>
-                    <input 
-                      type="text" 
-                      className="w-full bg-surface-bright border border-outline-variant rounded-lg px-3 py-2 text-on-surface focus:border-secondary focus:ring-1 focus:ring-secondary outline-none transition-colors disabled:opacity-70 disabled:bg-surface-container" 
-                      value={selectedVendor.bankAccount} 
+                    <input
+                      type="text"
+                      className="w-full bg-surface-bright border border-outline-variant rounded-lg px-3 py-2 text-on-surface focus:border-secondary focus:ring-1 focus:ring-secondary outline-none transition-colors disabled:opacity-70 disabled:bg-surface-container"
+                      value={selectedVendor.bankAccount}
                       onChange={(e) => setSelectedVendor({ ...selectedVendor, bankAccount: e.target.value })}
                       disabled={viewMode === 'view'}
                     />

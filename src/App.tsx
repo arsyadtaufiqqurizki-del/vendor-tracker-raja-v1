@@ -53,7 +53,7 @@ function AppContent() {
     id: `V-${Math.floor(10000 + Math.random() * 90000)}`,
     name: '', category: '', subCategory: '', phone: '', email: '', salesPerson: '',
     documents: { 'NIB': 'No', 'Akta Pendirian': 'No', 'Akta Pengesahan': 'No', 'NPWP': 'No', 'PKP': 'No', 'Non PKP': 'No', 'Sertifikat': 'No', 'Dokumen Pendukung': 'No', 'Registration Form RAJA': 'No' },
-    bankName: '', bankAccount: '', npwpNumber: '', nibAddress: '', correspAddress: '', remarks: '',
+    bankName: '', bankAccountName: '', bankAccount: '', npwpNumber: '', nibAddress: '', correspAddress: '', remarks: '',
     status: '', statusColor: '', dotColor: ''
   };
 

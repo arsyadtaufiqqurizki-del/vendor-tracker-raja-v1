@@ -10,6 +10,7 @@ export interface Vendor {
   salesPerson: string;
   documents: Record<string, string>;
   bankName: string;
+  bankAccountName: string;
   bankAccount: string;
   npwpNumber: string;
   nibAddress: string;

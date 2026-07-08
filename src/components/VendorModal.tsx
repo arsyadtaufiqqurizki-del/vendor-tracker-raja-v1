@@ -143,20 +143,30 @@ export function VendorModal({ vendor: initialVendor, viewMode, onClose, onSave }
             <div className="grid grid-cols-1 md:grid-cols-2 gap-md">
               <div>
                 <label className="block font-label-md text-on-surface-variant mb-1">Nama Bank</label>
-                <input 
-                  type="text" 
-                  className="w-full bg-surface-bright border border-outline-variant rounded-lg px-3 py-2 text-on-surface focus:border-secondary focus:ring-1 focus:ring-secondary outline-none transition-colors disabled:opacity-70 disabled:bg-surface-container" 
-                  value={vendor.bankName} 
+                <input
+                  type="text"
+                  className="w-full bg-surface-bright border border-outline-variant rounded-lg px-3 py-2 text-on-surface focus:border-secondary focus:ring-1 focus:ring-secondary outline-none transition-colors disabled:opacity-70 disabled:bg-surface-container"
+                  value={vendor.bankName}
                   onChange={(e) => setVendor({ ...vendor, bankName: e.target.value })}
                   disabled={viewMode === 'view'}
                 />
               </div>
               <div>
+                <label className="block font-label-md text-on-surface-variant mb-1">Nama Pemilik Rekening</label>
+                <input
+                  type="text"
+                  className="w-full bg-surface-bright border border-outline-variant rounded-lg px-3 py-2 text-on-surface focus:border-secondary focus:ring-1 focus:ring-secondary outline-none transition-colors disabled:opacity-70 disabled:bg-surface-container"
+                  value={vendor.bankAccountName}
+                  onChange={(e) => setVendor({ ...vendor, bankAccountName: e.target.value })}
+                  disabled={viewMode === 'view'}
+                />
+              </div>
+              <div>
                 <label className="block font-label-md text-on-surface-variant mb-1">Nomor Rekening</label>
-                <input 
-                  type="text" 
-                  className="w-full bg-surface-bright border border-outline-variant rounded-lg px-3 py-2 text-on-surface focus:border-secondary focus:ring-1 focus:ring-secondary outline-none transition-colors disabled:opacity-70 disabled:bg-surface-container" 
-                  value={vendor.bankAccount} 
+                <input
+                  type="text"
+                  className="w-full bg-surface-bright border border-outline-variant rounded-lg px-3 py-2 text-on-surface focus:border-secondary focus:ring-1 focus:ring-secondary outline-none transition-colors disabled:opacity-70 disabled:bg-surface-container"
+                  value={vendor.bankAccount}
                   onChange={(e) => setVendor({ ...vendor, bankAccount: e.target.value })}
                   disabled={viewMode === 'view'}
                 />

@@ -390,20 +390,30 @@ export function Dashboard() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-md">
                   <div>
                     <label className="block font-label-md text-on-surface-variant mb-1">Nama Bank</label>
-                    <input 
-                      type="text" 
-                      className="w-full bg-surface-bright border border-outline-variant rounded-lg px-3 py-2 text-on-surface focus:border-secondary focus:ring-1 focus:ring-secondary outline-none transition-colors disabled:opacity-70 disabled:bg-surface-container" 
-                      value={selectedVendor.bankName} 
+                    <input
+                      type="text"
+                      className="w-full bg-surface-bright border border-outline-variant rounded-lg px-3 py-2 text-on-surface focus:border-secondary focus:ring-1 focus:ring-secondary outline-none transition-colors disabled:opacity-70 disabled:bg-surface-container"
+                      value={selectedVendor.bankName}
                       onChange={(e) => setSelectedVendor({ ...selectedVendor, bankName: e.target.value })}
                       disabled={viewMode === 'view'}
                     />
                   </div>
                   <div>
+                    <label className="block font-label-md text-on-surface-variant mb-1">Nama Pemilik Rekening</label>
+                    <input
+                      type="text"
+                      className="w-full bg-surface-bright border border-outline-variant rounded-lg px-3 py-2 text-on-surface focus:border-secondary focus:ring-1 focus:ring-secondary outline-none transition-colors disabled:opacity-70 disabled:bg-surface-container"
+                      value={selectedVendor.bankAccountName}
+                      onChange={(e) => setSelectedVendor({ ...selectedVendor, bankAccountName: e.target.value })}
+                      disabled={viewMode === 'view'}
+                    />
+                  </div>
+                  <div>
                     <label className="block font-label-md text-on-surface-variant mb-1">Nomor Rekening</label>
-                    <input 
-                      type="text" 
-                      className="w-full bg-surface-bright border border-outline-variant rounded-lg px-3 py-2 text-on-surface focus:border-secondary focus:ring-1 focus:ring-secondary outline-none transition-colors disabled:opacity-70 disabled:bg-surface-container" 
-                      value={selectedVendor.bankAccount} 
+                    <input
+                      type="text"
+                      className="w-full bg-surface-bright border border-outline-variant rounded-lg px-3 py-2 text-on-surface focus:border-secondary focus:ring-1 focus:ring-secondary outline-none transition-colors disabled:opacity-70 disabled:bg-surface-container"
+                      value={selectedVendor.bankAccount}
                       onChange={(e) => setSelectedVendor({ ...selectedVendor, bankAccount: e.target.value })}
                       disabled={viewMode === 'view'}
                     />

@@ -10,6 +10,7 @@ create table if not exists public.vendors (
   sales_person text not null default '',
   documents jsonb not null default '{}'::jsonb,
   bank_name text not null default '',
+  bank_account_name text not null default '',
   bank_account text not null default '',
   npwp_number text not null default '',
   nib_address text not null default '',
