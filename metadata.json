@@ -1,0 +1,6 @@
+{
+  "name": "Vendor Management System",
+  "description": "A comprehensive Vendor Management System to track vendors, prospective vendors, and their compliance status.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
