@@ -42,3 +42,31 @@ create policy "authenticated full access to vendors" on public.vendors
 
 create policy "authenticated full access to prospective_vendors" on public.prospective_vendors
   for all to authenticated using (true) with check (true);
+
+-- Vendor document uploads (Dokumen Administrasi section) are stored in a
+-- private Storage bucket; the vendors.documents jsonb column stores the
+-- object path per document type instead of "Yes"/"No".
+insert into storage.buckets (id, name, public)
+values ('vendor-documents', 'vendor-documents', false)
+on conflict (id) do nothing;
+
+create policy "authenticated read vendor documents"
+on storage.objects for select
+to authenticated
+using (bucket_id = 'vendor-documents');
+
+create policy "authenticated upload vendor documents"
+on storage.objects for insert
+to authenticated
+with check (bucket_id = 'vendor-documents');
+
+create policy "authenticated update vendor documents"
+on storage.objects for update
+to authenticated
+using (bucket_id = 'vendor-documents')
+with check (bucket_id = 'vendor-documents');
+
+create policy "authenticated delete vendor documents"
+on storage.objects for delete
+to authenticated
+using (bucket_id = 'vendor-documents');

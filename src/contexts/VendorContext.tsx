@@ -19,7 +19,7 @@ const VendorContext = createContext<VendorContextType | undefined>(undefined);
 
 export const calculateCompliance = (docs: Record<string, string>) => {
   const required = ['NIB', 'Akta Pendirian', 'Akta Pengesahan', 'NPWP'];
-  const missing = required.find(doc => docs[doc] !== 'Yes');
+  const missing = required.find(doc => !docs[doc]);
 
   if (missing) {
     return {
@@ -31,7 +31,7 @@ export const calculateCompliance = (docs: Record<string, string>) => {
     };
   }
 
-  if (docs['PKP'] !== 'Yes' && docs['Non PKP'] !== 'Yes') {
+  if (!docs['PKP'] && !docs['Non PKP']) {
     return {
       status: 'Missing PKP/Non PKP',
       statusColor: 'text-on-error-container bg-error-container/50',

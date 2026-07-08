@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useRef, useState, useEffect, ChangeEvent } from 'react';
 import { X, Upload } from 'lucide-react';
 import { Vendor } from '../types';
+import { documentFileName, getVendorDocumentUrl, removeVendorDocument, uploadVendorDocument } from '../lib/documentUpload';
 
 interface VendorModalProps {
   vendor: Vendor;
@@ -11,6 +12,9 @@ interface VendorModalProps {
 
 export function VendorModal({ vendor: initialVendor, viewMode, onClose, onSave }: VendorModalProps) {
   const [vendor, setVendor] = useState<Vendor>(initialVendor);
+  const [uploadingDoc, setUploadingDoc] = useState<string | null>(null);
+  const pendingDoc = useRef<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     setVendor(initialVendor);
@@ -21,6 +25,50 @@ export function VendorModal({ vendor: initialVendor, viewMode, onClose, onSave }
       ...prev,
       documents: { ...prev.documents, [docName]: value }
     }));
+  };
+
+  const handleUploadClick = (docName: string) => {
+    pendingDoc.current = docName;
+    fileInputRef.current?.click();
+  };
+
+  const handleFileSelected = async (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    const docName = pendingDoc.current;
+    e.target.value = '';
+    if (!file || !docName) return;
+
+    setUploadingDoc(docName);
+    try {
+      const path = await uploadVendorDocument(vendor.id, docName, file);
+      handleDocumentChange(docName, path);
+    } catch (err) {
+      alert(`Gagal mengunggah dokumen: ${(err as Error).message}`);
+    } finally {
+      setUploadingDoc(null);
+      pendingDoc.current = null;
+    }
+  };
+
+  const handleViewDocument = async (path: string) => {
+    try {
+      const url = await getVendorDocumentUrl(path);
+      window.open(url, '_blank', 'noopener,noreferrer');
+    } catch (err) {
+      alert(`Gagal membuka dokumen: ${(err as Error).message}`);
+    }
+  };
+
+  const handleRemoveDocument = async (docName: string) => {
+    const path = vendor.documents[docName];
+    if (!path) return;
+    try {
+      await removeVendorDocument(path);
+    } catch (err) {
+      alert(`Gagal menghapus dokumen: ${(err as Error).message}`);
+      return;
+    }
+    handleDocumentChange(docName, '');
   };
 
   return (
@@ -111,29 +159,57 @@ export function VendorModal({ vendor: initialVendor, viewMode, onClose, onSave }
           {/* Dokumen Administrasi */}
           <section>
             <h3 className="font-headline-sm text-headline-sm text-primary mb-md pb-2 border-b border-outline-variant/50">2. Dokumen Administrasi</h3>
+            <input type="file" ref={fileInputRef} className="hidden" onChange={handleFileSelected} />
             <div className="grid grid-cols-1 md:grid-cols-2 gap-md">
-              {['NIB', 'Akta Pendirian', 'Akta Pengesahan', 'NPWP', 'PKP', 'Non PKP', 'Sertifikat', 'Dokumen Pendukung', 'Registration Form RAJA'].map((doc) => (
-                <div key={doc} className="flex items-center justify-between bg-surface-bright border border-outline-variant rounded-lg p-3">
-                  <span className="font-body-md text-on-surface font-medium">{doc}</span>
-                  <div className="flex items-center gap-sm">
-                    <select 
-                      className="bg-surface border border-outline-variant rounded px-2 py-1 font-body-sm text-on-surface outline-none focus:border-secondary disabled:opacity-70 disabled:bg-surface-container"
-                      value={vendor.documents[doc]}
-                      onChange={(e) => handleDocumentChange(doc, e.target.value)}
-                      disabled={viewMode === 'view'}
-                    >
-                      <option value="Yes">Yes</option>
-                      <option value="No">No</option>
-                    </select>
-                    {(viewMode === 'edit' || viewMode === 'add') && (
-                      <button className="flex items-center gap-1.5 px-3 py-1 bg-surface-container-high hover:bg-surface-container-highest border border-outline-variant rounded text-on-surface text-body-sm transition-colors">
-                        <Upload className="h-3.5 w-3.5" />
-                        Upload
-                      </button>
-                    )}
+              {['NIB', 'Akta Pendirian', 'Akta Pengesahan', 'NPWP', 'PKP', 'Non PKP', 'Sertifikat', 'Dokumen Pendukung', 'Registration Form RAJA'].map((doc) => {
+                const filePath = vendor.documents[doc];
+                const isUploading = uploadingDoc === doc;
+                return (
+                  <div key={doc} className="flex items-center justify-between bg-surface-bright border border-outline-variant rounded-lg p-3 gap-sm">
+                    <div className="min-w-0">
+                      <span className="font-body-md text-on-surface font-medium block">{doc}</span>
+                      {filePath ? (
+                        <span className="font-body-sm text-body-sm text-on-surface-variant truncate block">{documentFileName(filePath)}</span>
+                      ) : (
+                        <span className="font-body-sm text-body-sm text-error block">Belum ada dokumen</span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-sm shrink-0">
+                      {filePath && (
+                        <button
+                          type="button"
+                          onClick={() => handleViewDocument(filePath)}
+                          className="px-3 py-1 border border-outline-variant rounded text-on-surface text-body-sm hover:bg-surface-container-high transition-colors"
+                        >
+                          Lihat
+                        </button>
+                      )}
+                      {(viewMode === 'edit' || viewMode === 'add') && (
+                        <>
+                          <button
+                            type="button"
+                            onClick={() => handleUploadClick(doc)}
+                            disabled={isUploading}
+                            className="flex items-center gap-1.5 px-3 py-1 bg-surface-container-high hover:bg-surface-container-highest border border-outline-variant rounded text-on-surface text-body-sm transition-colors disabled:opacity-50"
+                          >
+                            <Upload className="h-3.5 w-3.5" />
+                            {isUploading ? 'Mengunggah...' : filePath ? 'Ganti' : 'Upload'}
+                          </button>
+                          {filePath && (
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveDocument(doc)}
+                              className="text-error text-body-sm hover:underline"
+                            >
+                              Hapus
+                            </button>
+                          )}
+                        </>
+                      )}
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </section>
 

@@ -30,7 +30,7 @@ export function Dashboard() {
   // Dynamic calculations
   const totalVendors = vendors.length;
 
-  const npwpCompliantCount = vendors.filter(v => v.documents['NPWP'] === 'Yes').length;
+  const npwpCompliantCount = vendors.filter(v => !!v.documents['NPWP']).length;
   const npwpComplianceRate = totalVendors > 0 ? Math.round((npwpCompliantCount / totalVendors) * 100) : 0;
 
   const categoryCounts = vendors.reduce((acc, vendor) => {
@@ -55,7 +55,7 @@ export function Dashboard() {
     color: colors[index % colors.length]
   })).sort((a, b) => b.value - a.value);
 
-  const countCompliance = (docName: string) => vendors.filter(v => v.documents[docName] === 'Yes').length;
+  const countCompliance = (docName: string) => vendors.filter(v => !!v.documents[docName]).length;
   
   const npwpRate = totalVendors > 0 ? Math.round((countCompliance('NPWP') / totalVendors) * 100) : 0;
   const aktaRate = totalVendors > 0 ? Math.round((countCompliance('Akta Pendirian') / totalVendors) * 100) : 0;

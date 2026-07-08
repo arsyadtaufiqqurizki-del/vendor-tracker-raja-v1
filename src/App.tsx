@@ -76,7 +76,7 @@ function AppContent() {
   const emptyVendor: Vendor = {
     id: `V-${Math.floor(10000 + Math.random() * 90000)}`,
     name: '', category: '', subCategory: '', phone: '', email: '', salesPerson: '',
-    documents: { 'NIB': 'No', 'Akta Pendirian': 'No', 'Akta Pengesahan': 'No', 'NPWP': 'No', 'PKP': 'No', 'Non PKP': 'No', 'Sertifikat': 'No', 'Dokumen Pendukung': 'No', 'Registration Form RAJA': 'No' },
+    documents: { 'NIB': '', 'Akta Pendirian': '', 'Akta Pengesahan': '', 'NPWP': '', 'PKP': '', 'Non PKP': '', 'Sertifikat': '', 'Dokumen Pendukung': '', 'Registration Form RAJA': '' },
     bankName: '', bankAccountName: '', bankAccount: '', npwpNumber: '', nibAddress: '', correspAddress: '', remarks: '',
     status: '', statusColor: '', dotColor: ''
   };

@@ -139,23 +139,23 @@ export function Compliance() {
                     <td className="p-md text-primary">{vendor.name}</td>
                     <td className="p-md">{vendor.category}</td>
                     <td className="p-md">
-                      <span className={`inline-flex items-center justify-center w-6 h-6 rounded-full ${vendor.documents['NIB'] === 'Yes' ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'}`}>
-                        {vendor.documents['NIB'] === 'Yes' ? '✓' : '✗'}
+                      <span className={`inline-flex items-center justify-center w-6 h-6 rounded-full ${vendor.documents['NIB'] ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'}`}>
+                        {vendor.documents['NIB'] ? '✓' : '✗'}
                       </span>
                     </td>
                     <td className="p-md">
-                      <span className={`inline-flex items-center justify-center w-6 h-6 rounded-full ${vendor.documents['Akta Pendirian'] === 'Yes' && vendor.documents['Akta Pengesahan'] === 'Yes' ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'}`}>
-                        {vendor.documents['Akta Pendirian'] === 'Yes' && vendor.documents['Akta Pengesahan'] === 'Yes' ? '✓' : '✗'}
+                      <span className={`inline-flex items-center justify-center w-6 h-6 rounded-full ${vendor.documents['Akta Pendirian'] && vendor.documents['Akta Pengesahan'] ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'}`}>
+                        {vendor.documents['Akta Pendirian'] && vendor.documents['Akta Pengesahan'] ? '✓' : '✗'}
                       </span>
                     </td>
                     <td className="p-md">
-                      <span className={`inline-flex items-center justify-center w-6 h-6 rounded-full ${vendor.documents['NPWP'] === 'Yes' ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'}`}>
-                        {vendor.documents['NPWP'] === 'Yes' ? '✓' : '✗'}
+                      <span className={`inline-flex items-center justify-center w-6 h-6 rounded-full ${vendor.documents['NPWP'] ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'}`}>
+                        {vendor.documents['NPWP'] ? '✓' : '✗'}
                       </span>
                     </td>
                     <td className="p-md">
-                      <span className={`inline-flex items-center justify-center w-6 h-6 rounded-full ${vendor.documents['PKP'] === 'Yes' || vendor.documents['Non PKP'] === 'Yes' ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'}`}>
-                        {vendor.documents['PKP'] === 'Yes' || vendor.documents['Non PKP'] === 'Yes' ? '✓' : '✗'}
+                      <span className={`inline-flex items-center justify-center w-6 h-6 rounded-full ${vendor.documents['PKP'] || vendor.documents['Non PKP'] ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'}`}>
+                        {vendor.documents['PKP'] || vendor.documents['Non PKP'] ? '✓' : '✗'}
                       </span>
                     </td>
                     <td className="p-md">
