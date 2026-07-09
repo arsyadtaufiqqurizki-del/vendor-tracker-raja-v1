@@ -1,0 +1,19 @@
+# Cloudflare Pages configuration for Vendor Tracker.
+# Docs: https://developers.cloudflare.com/pages/configuration/
+
+name = "vendor-tracker"
+
+# Output of `vite build`. vite.config.ts has no build.outDir override, so
+# Vite's default "dist" directory applies.
+pages_build_output_dir = "dist"
+
+compatibility_date = "2026-07-09"
+
+# This app is a static client-side SPA (React + supabase-js running fully in
+# the browser). There are no Pages Functions and no server-side bindings, so
+# no [vars]/[[kv_namespaces]]/etc. are declared here.
+#
+# VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY are build-time Vite env vars
+# (read via import.meta.env and inlined into the JS bundle by `vite build`),
+# NOT Pages runtime vars — they must NOT be set via `wrangler pages secret`.
+# See CLOUDFLARE_DEPLOYMENT.md for where to configure them.
