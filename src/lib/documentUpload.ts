@@ -1,8 +1,8 @@
 import { supabase } from './supabase';
 
-const BUCKET = 'vendor-documents';
+export const BUCKET = 'vendor-documents';
 
-function sanitize(name: string) {
+export function sanitize(name: string) {
   return name.replace(/[^a-zA-Z0-9.\-_]/g, '_');
 }
 

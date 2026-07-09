@@ -1,4 +1,4 @@
-import { LucideIcon, LayoutDashboard, Factory, Users, ShieldCheck, Plus, HelpCircle, LogOut } from 'lucide-react';
+import { LucideIcon, LayoutDashboard, Factory, Users, ShieldCheck, Inbox, Plus, HelpCircle, LogOut } from 'lucide-react';
 import { ViewType } from '../types';
 import { cn } from '../lib/utils';
 
@@ -16,6 +16,7 @@ const navItems: { id: ViewType; label: string; icon: LucideIcon }[] = [
   { id: 'vendors', label: 'Vendors', icon: Factory },
   { id: 'prospectiveVendors', label: 'Prospective Vendors', icon: Users },
   { id: 'compliance', label: 'Compliance', icon: ShieldCheck },
+  { id: 'requestForm', label: 'Request Form', icon: Inbox },
 ];
 
 export function Sidebar({ currentView, onViewChange, isOpen, onClose, onNewRequisition, onLogout }: SidebarProps) {

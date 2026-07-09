@@ -6,6 +6,7 @@ import { Dashboard } from './views/Dashboard';
 import { Vendors } from './views/Vendors';
 import { ProspectiveVendors } from './views/ProspectiveVendors';
 import { Compliance } from './views/Compliance';
+import { RequestForm } from './views/RequestForm';
 import { Login } from './views/Login';
 import { ViewType, Vendor } from './types';
 import { VendorProvider, useVendors } from './contexts/VendorContext';
@@ -59,6 +60,8 @@ function AppContent() {
         return <ProspectiveVendors />;
       case 'compliance':
         return <Compliance />;
+      case 'requestForm':
+        return <RequestForm />;
       default:
         return <Dashboard />;
     }
@@ -70,6 +73,7 @@ function AppContent() {
       case 'vendors': return 'Vendors';
       case 'prospectiveVendors': return 'Prospective Vendors';
       case 'compliance': return 'Compliance';
+      case 'requestForm': return 'Request Form';
     }
   };
 

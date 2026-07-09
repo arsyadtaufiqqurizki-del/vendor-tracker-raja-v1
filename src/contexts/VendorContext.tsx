@@ -1,10 +1,16 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { Vendor, ProspectiveVendor } from '../types';
+import { Vendor, ProspectiveVendor, VendorRequest } from '../types';
 import { supabase } from '../lib/supabase';
+import {
+  listVendorRequests,
+  approveVendorRequest as approveVendorRequestApi,
+  rejectVendorRequest as rejectVendorRequestApi,
+} from '../lib/vendorRequests';
 
 interface VendorContextType {
   vendors: Vendor[];
   prospectiveVendors: ProspectiveVendor[];
+  vendorRequests: VendorRequest[];
   loading: boolean;
   updateVendor: (vendor: Vendor) => void;
   addVendor: (vendor: Vendor) => void;
@@ -12,6 +18,8 @@ interface VendorContextType {
   addProspectiveVendor: (vendor: ProspectiveVendor) => void;
   updateProspectiveVendor: (vendor: ProspectiveVendor) => void;
   deleteProspectiveVendor: (id: string) => void;
+  approveVendorRequest: (request: VendorRequest) => Promise<void>;
+  rejectVendorRequest: (id: string) => Promise<void>;
   calculateCompliance: (docs: Record<string, string>) => any;
 }
 
@@ -118,13 +126,18 @@ const prospectiveToRow = (vendor: ProspectiveVendor) => ({
 export function VendorProvider({ children }: { children: ReactNode }) {
   const [vendors, setVendors] = useState<Vendor[]>([]);
   const [prospectiveVendors, setProspectiveVendors] = useState<ProspectiveVendor[]>([]);
+  const [vendorRequests, setVendorRequests] = useState<VendorRequest[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    (async () => {
-      const [vendorsRes, prospectiveRes] = await Promise.all([
+    const fetchAll = async () => {
+      const [vendorsRes, prospectiveRes, requestsRes] = await Promise.all([
         supabase.from('vendors').select('*').order('created_at', { ascending: false }),
         supabase.from('prospective_vendors').select('*').order('created_at', { ascending: false }),
+        listVendorRequests().catch((error) => {
+          console.error('Failed to load vendor requests:', error);
+          return [] as VendorRequest[];
+        }),
       ]);
 
       if (vendorsRes.error) {
@@ -139,8 +152,23 @@ export function VendorProvider({ children }: { children: ReactNode }) {
         setProspectiveVendors((prospectiveRes.data ?? []).map(prospectiveFromRow));
       }
 
+      setVendorRequests(requestsRes);
       setLoading(false);
-    })();
+    };
+
+    fetchAll();
+
+    // The initial fetch above can fire before Supabase finishes restoring a
+    // session (or before the user has signed in at all), in which case
+    // authenticated-only tables come back empty. Re-fetch once sign-in
+    // actually completes so data shows up without a manual page reload.
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (event === 'SIGNED_IN') {
+        fetchAll();
+      }
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
   const updateVendor = (updatedVendor: Vendor) => {
@@ -189,8 +217,20 @@ export function VendorProvider({ children }: { children: ReactNode }) {
       .then(({ error }) => { if (error) console.error('Failed to delete prospective vendor:', error); });
   };
 
+  const approveVendorRequest = async (request: VendorRequest) => {
+    const newVendor = await approveVendorRequestApi(request);
+    const vendorWithStatus = { ...newVendor, ...calculateCompliance(newVendor.documents) };
+    setVendors([vendorWithStatus, ...vendors]);
+    setVendorRequests(vendorRequests.map(r => r.id === request.id ? { ...r, requestStatus: 'approved' } : r));
+  };
+
+  const rejectVendorRequest = async (id: string) => {
+    await rejectVendorRequestApi(id);
+    setVendorRequests(vendorRequests.map(r => r.id === id ? { ...r, requestStatus: 'rejected' } : r));
+  };
+
   return (
-    <VendorContext.Provider value={{ vendors, prospectiveVendors, loading, updateVendor, addVendor, deleteVendor, addProspectiveVendor, updateProspectiveVendor, deleteProspectiveVendor, calculateCompliance }}>
+    <VendorContext.Provider value={{ vendors, prospectiveVendors, vendorRequests, loading, updateVendor, addVendor, deleteVendor, addProspectiveVendor, updateProspectiveVendor, deleteProspectiveVendor, approveVendorRequest, rejectVendorRequest, calculateCompliance }}>
       {children}
     </VendorContext.Provider>
   );
