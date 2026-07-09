@@ -91,7 +91,7 @@ Functions saat request, bukan saat build SPA statis.
   - Screenshot disimpan di scratchpad session ini untuk referensi visual
     (tidak dicommit ke repo).
 
-## Fase 5 — Auto-deploy via GitHub Actions ⏳ Sedang berjalan (butuh setup manual di GitHub)
+## Fase 5 — Auto-deploy via GitHub Actions ✅ Selesai
 
 `vendor-tracker` dibuat sebagai project **Direct Upload**
 (`wrangler pages project create`), dan menurut dokumentasi Cloudflare,
@@ -112,11 +112,8 @@ tetap dipakai, cuma build-nya pindah dari laptop ke runner GitHub.
 - [x] Ambil Cloudflare Account ID lewat `npx wrangler whoami`:
       `c98dbd3aae562daa762548ec55d19977` (bukan rahasia, tapi tetap
       disimpan sebagai secret di bawah demi konsistensi).
-- [ ] **Belum bisa dikerjakan otomatis oleh Claude** — `gh` CLI di mesin ini
-      belum login (`gh auth status` gagal), jadi 4 GitHub Actions secret di
-      bawah harus di-set manual oleh kamu. Buka repo di GitHub →
-      **Settings → Secrets and variables → Actions → New repository
-      secret**, buat 4 secret ini:
+- [x] 4 GitHub Actions secret di-set manual oleh user (`gh` CLI di mesin
+      ini tidak login, jadi tidak bisa di-set otomatis dari sini):
 
   | Secret name | Value | Cara dapetinnya |
   |---|---|---|
@@ -125,12 +122,12 @@ tetap dipakai, cuma build-nya pindah dari laptop ke runner GitHub.
   | `VITE_SUPABASE_URL` | isi dari `.env.local` | Sama persis dengan yang dipakai deploy manual lokal. |
   | `VITE_SUPABASE_ANON_KEY` | isi dari `.env.local` | Sama persis dengan yang dipakai deploy manual lokal. |
 
-- [ ] Setelah 4 secret di atas ke-set, push apa pun ke `main` (atau
-      **Actions → Deploy to Cloudflare Pages → Run workflow** buat trigger
-      manual pertama kali) buat mastiin workflow-nya jalan sukses.
-- [ ] Cek tab **Actions** di GitHub — job hijau berarti deploy otomatis
-      sudah aktif. Kalau merah, kemungkinan besar salah satu dari 4 secret
-      di atas salah/kosong.
+- [x] Run pertama ter-trigger otomatis oleh push commit workflow-nya sendiri
+      ke `main`. Semua step sukses: Checkout → Set up Node → Install deps →
+      Build → Deploy to Cloudflare Pages. Run:
+      https://github.com/arsyadtaufiqqurizki-del/vendor-tracker-raja-v1/actions/runs/29024486215
+- [x] Verifikasi pasca-deploy: `https://vendor-tracker-7c7.pages.dev`
+      dicek via `curl` setelah run selesai, respons `HTTP 200`.
 
 > Kalau nanti mau ganti ke Git integration native Cloudflare (bukan lewat
 > GitHub Actions), itu berarti bikin project baru — bilang aja, aku bisa
