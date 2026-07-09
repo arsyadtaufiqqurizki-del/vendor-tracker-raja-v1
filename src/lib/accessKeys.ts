@@ -44,3 +44,8 @@ export async function setAccessKeyActive(code: string, active: boolean): Promise
   const { error } = await supabase.from('vendor_access_keys').update({ active }).eq('code', code);
   if (error) throw error;
 }
+
+export async function deleteAccessKey(code: string): Promise<void> {
+  const { error } = await supabase.from('vendor_access_keys').delete().eq('code', code);
+  if (error) throw error;
+}

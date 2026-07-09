@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react';
-import { Ban, Check, Eye, KeyRound, Plus } from 'lucide-react';
+import { Ban, Check, Eye, KeyRound, Plus, Trash2 } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { useVendors } from '../contexts/VendorContext';
 import { AccessKey, VendorRequest, VendorRequestStatus } from '../types';
 import { VendorRequestDetailModal } from '../components/VendorRequestDetailModal';
-import { listAccessKeys, generateAccessKey, setAccessKeyActive } from '../lib/accessKeys';
+import { listAccessKeys, generateAccessKey, setAccessKeyActive, deleteAccessKey } from '../lib/accessKeys';
 
 type RequestFilter = 'Semua' | 'Pending' | 'Rejected' | 'Approved';
 type Tab = 'permintaan' | 'accessKey';
@@ -99,6 +99,16 @@ export function RequestForm() {
       setAccessKeys(accessKeys.map((k) => (k.code === key.code ? { ...k, active: !k.active } : k)));
     } catch (err) {
       alert(`Gagal mengubah status kode: ${(err as Error).message}`);
+    }
+  };
+
+  const handleDeleteKey = async (key: AccessKey) => {
+    if (!confirm(`Hapus kode ${key.code}? Tindakan ini tidak bisa dibatalkan.`)) return;
+    try {
+      await deleteAccessKey(key.code);
+      setAccessKeys(accessKeys.filter((k) => k.code !== key.code));
+    } catch (err) {
+      alert(`Gagal menghapus kode: ${(err as Error).message}`);
     }
   };
 
@@ -268,13 +278,22 @@ export function RequestForm() {
                         </span>
                       </td>
                       <td className="p-md text-right">
-                        <button
-                          onClick={() => handleToggleActive(k)}
-                          className={cn("relative inline-flex h-6 w-11 items-center rounded-full transition-colors", k.active ? "bg-secondary" : "bg-surface-container-highest")}
-                          title={k.active ? 'Nonaktifkan kode' : 'Aktifkan kode'}
-                        >
-                          <span className={cn("inline-block h-4 w-4 transform rounded-full bg-white transition-transform", k.active ? "translate-x-6" : "translate-x-1")} />
-                        </button>
+                        <div className="flex items-center justify-end gap-sm">
+                          <button
+                            onClick={() => handleToggleActive(k)}
+                            className={cn("relative inline-flex h-6 w-11 items-center rounded-full transition-colors", k.active ? "bg-secondary" : "bg-surface-container-highest")}
+                            title={k.active ? 'Nonaktifkan kode' : 'Aktifkan kode'}
+                          >
+                            <span className={cn("inline-block h-4 w-4 transform rounded-full bg-white transition-transform", k.active ? "translate-x-6" : "translate-x-1")} />
+                          </button>
+                          <button
+                            onClick={() => handleDeleteKey(k)}
+                            className="text-error hover:bg-error-container/50 p-1.5 rounded transition-colors"
+                            title="Hapus kode"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))
