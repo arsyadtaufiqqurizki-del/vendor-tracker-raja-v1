@@ -183,6 +183,11 @@ insert into storage.buckets (id, name, public)
 values ('vendor-request-documents', 'vendor-request-documents', false)
 on conflict (id) do nothing;
 
+-- Insert-only for anon on purpose: no anon select/update policy, so a vendor
+-- can never read or overwrite another vendor's uploaded documents in this
+-- bucket. uploadRequestDocument() must NOT pass { upsert: true } — Postgres
+-- checks ON CONFLICT DO UPDATE's RLS (which needs SELECT+UPDATE policies)
+-- even when no row actually conflicts, so upsert would force widening this.
 create policy "anon upload vendor request documents"
 on storage.objects for insert
 to anon

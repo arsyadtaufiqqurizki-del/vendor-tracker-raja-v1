@@ -54,9 +54,14 @@ export async function submitVendorRequest(accessKey: string, id: string, data: V
   if (error) throw error;
 }
 
+// No upsert: the path already embeds Date.now(), so it never collides, and
+// upsert:true would require anon SELECT/UPDATE storage policies too (Postgres
+// checks ON CONFLICT DO UPDATE's RLS even when no row actually conflicts) —
+// which would let any vendor read or overwrite another vendor's documents in
+// this private, pre-review bucket.
 export async function uploadRequestDocument(requestId: string, docName: string, file: File): Promise<string> {
   const path = `${sanitize(requestId)}/${sanitize(docName)}/${Date.now()}-${sanitize(file.name)}`;
-  const { error } = await supabase.storage.from(REQUEST_BUCKET).upload(path, file, { upsert: true });
+  const { error } = await supabase.storage.from(REQUEST_BUCKET).upload(path, file);
   if (error) throw error;
   return path;
 }
