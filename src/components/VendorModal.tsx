@@ -159,7 +159,7 @@ export function VendorModal({ vendor: initialVendor, viewMode, onClose, onSave }
           {/* Dokumen Administrasi */}
           <section>
             <h3 className="font-headline-sm text-headline-sm text-primary mb-md pb-2 border-b border-outline-variant/50">2. Dokumen Administrasi</h3>
-            <input type="file" ref={fileInputRef} className="hidden" onChange={handleFileSelected} />
+            <input type="file" accept="application/pdf" ref={fileInputRef} className="hidden" onChange={handleFileSelected} />
             <div className="grid grid-cols-1 md:grid-cols-2 gap-md">
               {['NIB', 'Akta Pendirian', 'Akta Pengesahan', 'NPWP', 'PKP', 'Non PKP', 'Sertifikat', 'Dokumen Pendukung', 'Registration Form RAJA'].map((doc) => {
                 const filePath = vendor.documents[doc];

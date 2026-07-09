@@ -45,10 +45,12 @@ create policy "authenticated full access to prospective_vendors" on public.prosp
 
 -- Vendor document uploads (Dokumen Administrasi section) are stored in a
 -- private Storage bucket; the vendors.documents jsonb column stores the
--- object path per document type instead of "Yes"/"No".
-insert into storage.buckets (id, name, public)
-values ('vendor-documents', 'vendor-documents', false)
-on conflict (id) do nothing;
+-- object path per document type instead of "Yes"/"No". PDF-only, max 10MB.
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values ('vendor-documents', 'vendor-documents', false, 10485760, array['application/pdf'])
+on conflict (id) do update set
+  file_size_limit = excluded.file_size_limit,
+  allowed_mime_types = excluded.allowed_mime_types;
 
 create policy "authenticated read vendor documents"
 on storage.objects for select
@@ -178,10 +180,12 @@ grant execute on function public.submit_vendor_request to anon;
 -- Storage bucket for documents uploaded during vendor self-registration.
 -- Separate from vendor-documents (authenticated-only read) so vendors never
 -- get read access to other vendors' files; approveVendorRequest (Phase 2)
--- moves accepted files into vendor-documents.
-insert into storage.buckets (id, name, public)
-values ('vendor-request-documents', 'vendor-request-documents', false)
-on conflict (id) do nothing;
+-- moves accepted files into vendor-documents. PDF-only, max 10MB.
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values ('vendor-request-documents', 'vendor-request-documents', false, 10485760, array['application/pdf'])
+on conflict (id) do update set
+  file_size_limit = excluded.file_size_limit,
+  allowed_mime_types = excluded.allowed_mime_types;
 
 -- Insert-only for anon on purpose: no anon select/update policy, so a vendor
 -- can never read or overwrite another vendor's uploaded documents in this

@@ -169,7 +169,7 @@ export function VendorRequestForm({ accessKey, onBack }: VendorRequestFormProps)
 
       <section>
         <h3 className="font-headline-sm text-headline-sm text-primary mb-md pb-2 border-b border-outline-variant/50">2. Dokumen Administrasi</h3>
-        <input type="file" ref={fileInputRef} className="hidden" onChange={handleFileSelected} />
+        <input type="file" accept="application/pdf" ref={fileInputRef} className="hidden" onChange={handleFileSelected} />
         <div className="grid grid-cols-1 md:grid-cols-2 gap-md">
           {DOCUMENT_TYPES.map((doc) => {
             const filePath = form.documents[doc];
