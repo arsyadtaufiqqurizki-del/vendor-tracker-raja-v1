@@ -91,7 +91,52 @@ Functions saat request, bukan saat build SPA statis.
   - Screenshot disimpan di scratchpad session ini untuk referensi visual
     (tidak dicommit ke repo).
 
-## Fase 5 — Custom domain cutover ⬜ Belum dikerjakan (opsional/kondisional)
+## Fase 5 — Auto-deploy via GitHub Actions ⏳ Sedang berjalan (butuh setup manual di GitHub)
+
+`vendor-tracker` dibuat sebagai project **Direct Upload**
+(`wrangler pages project create`), dan menurut dokumentasi Cloudflare,
+**project tipe ini tidak bisa dikonversi ke Git integration** — begitu
+Direct Upload, selamanya Direct Upload (kecuali bikin project baru lewat
+dashboard "Connect to Git", yang berarti URL `*.pages.dev` beda dan
+project lama jadi harus dihapus manual). Karena itu, deploy otomatis
+diimplementasikan lewat **GitHub Actions yang menjalankan `wrangler pages
+deploy`** tiap push ke `main` — project & URL Cloudflare yang sekarang
+tetap dipakai, cuma build-nya pindah dari laptop ke runner GitHub.
+
+- [x] Buat workflow `.github/workflows/deploy-cloudflare-pages.yml`:
+      trigger `push` ke `main` → `npm ci` → `npm run build` (dengan env
+      `VITE_SUPABASE_URL`/`VITE_SUPABASE_ANON_KEY` dari GitHub Secrets,
+      karena build sekarang jalan di runner GitHub, bukan lokal/`.env.local`)
+      → `cloudflare/wrangler-action@v3` menjalankan
+      `pages deploy dist --project-name=vendor-tracker`.
+- [x] Ambil Cloudflare Account ID lewat `npx wrangler whoami`:
+      `c98dbd3aae562daa762548ec55d19977` (bukan rahasia, tapi tetap
+      disimpan sebagai secret di bawah demi konsistensi).
+- [ ] **Belum bisa dikerjakan otomatis oleh Claude** — `gh` CLI di mesin ini
+      belum login (`gh auth status` gagal), jadi 4 GitHub Actions secret di
+      bawah harus di-set manual oleh kamu. Buka repo di GitHub →
+      **Settings → Secrets and variables → Actions → New repository
+      secret**, buat 4 secret ini:
+
+  | Secret name | Value | Cara dapetinnya |
+  |---|---|---|
+  | `CLOUDFLARE_API_TOKEN` | token baru | **Jangan** pakai OAuth token dari `wrangler login` (itu punya scope kebanyakan & bukan buat CI). Buat token khusus: [dash.cloudflare.com/profile/api-tokens](https://dash.cloudflare.com/profile/api-tokens) → Create Token → cari template **"Edit Cloudflare Workers"** atau custom permission **Account → Cloudflare Pages → Edit** → scope ke account kamu saja. |
+  | `CLOUDFLARE_ACCOUNT_ID` | `c98dbd3aae562daa762548ec55d19977` | Sudah didapat dari `wrangler whoami` di atas. |
+  | `VITE_SUPABASE_URL` | isi dari `.env.local` | Sama persis dengan yang dipakai deploy manual lokal. |
+  | `VITE_SUPABASE_ANON_KEY` | isi dari `.env.local` | Sama persis dengan yang dipakai deploy manual lokal. |
+
+- [ ] Setelah 4 secret di atas ke-set, push apa pun ke `main` (atau
+      **Actions → Deploy to Cloudflare Pages → Run workflow** buat trigger
+      manual pertama kali) buat mastiin workflow-nya jalan sukses.
+- [ ] Cek tab **Actions** di GitHub — job hijau berarti deploy otomatis
+      sudah aktif. Kalau merah, kemungkinan besar salah satu dari 4 secret
+      di atas salah/kosong.
+
+> Kalau nanti mau ganti ke Git integration native Cloudflare (bukan lewat
+> GitHub Actions), itu berarti bikin project baru — bilang aja, aku bisa
+> bantu bandingin trade-off-nya lebih detail dulu.
+
+## Fase 6 — Custom domain cutover ⬜ Belum dikerjakan (opsional/kondisional)
 
 - [ ] `npx wrangler pages domain add vendor-tracker <domain>` (atau lewat
       dashboard: project → Custom domains).
@@ -102,7 +147,7 @@ Functions saat request, bukan saat build SPA statis.
 - [ ] Setelah cutover, biarkan deployment Vercel tetap hidup beberapa hari
       sebagai fallback sebelum benar-benar didekomisioning.
 
-## Fase 6 — Rollback plan (dokumentasi, belum pernah diuji)
+## Fase 7 — Rollback plan (dokumentasi, belum pernah diuji)
 
 - [ ] Rollback di Cloudflare: dashboard → project → Deployments → pilih
       deployment sebelumnya → "Rollback to this deployment".
