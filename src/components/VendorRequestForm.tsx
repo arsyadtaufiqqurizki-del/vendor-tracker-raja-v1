@@ -85,8 +85,8 @@ export function VendorRequestForm({ accessKey, onBack }: VendorRequestFormProps)
       <div className="flex flex-col items-center text-center gap-md py-xl">
         <CheckCircle2 className="h-12 w-12 text-on-tertiary-container" />
         <h2 className="font-headline-lg text-headline-lg text-primary">Terima kasih!</h2>
-        <p className="font-body-md text-body-md text-on-surface-variant max-w-sm">
-          Request pendaftaran vendor Anda sudah kami terima dan sedang direview oleh tim kami.
+        <p className="font-body-md text-body-md text-on-surface-variant text-center max-w-2xl">
+          Permintaan pendaftaran vendor Anda telah kami terima dan sedang dalam proses peninjauan. Seluruh data dan dokumen yang Anda kirimkan dijamin kerahasiaannya, serta hanya akan digunakan oleh Tim Procurement PT Rukun Raharja untuk keperluan evaluasi ini.
         </p>
         <button
           onClick={onBack}
