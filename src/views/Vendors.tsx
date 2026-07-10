@@ -14,6 +14,7 @@ export function Vendors() {
   const [selectedVendor, setSelectedVendor] = useState<Vendor | null>(null);
   const [viewMode, setViewMode] = useState<'view' | 'edit' | 'add'>('view');
   const [uploadingDoc, setUploadingDoc] = useState<string | null>(null);
+  const [vendorToDelete, setVendorToDelete] = useState<Vendor | null>(null);
   const pendingDoc = useRef<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -302,9 +303,7 @@ export function Vendors() {
                       <button onClick={() => { setSelectedVendor(vendor); setViewMode('edit'); }} className="text-on-surface-variant hover:text-primary p-1.5 rounded hover:bg-surface-container-high transition-colors" title="Edit Vendor">
                         <Edit2 className="h-4 w-4" />
                       </button>
-                      <button onClick={() => {
-                        deleteVendor(vendor.id);
-                      }} className="text-on-surface-variant hover:text-error p-1.5 rounded hover:bg-surface-container-high transition-colors" title="Delete Vendor">
+                      <button onClick={() => setVendorToDelete(vendor)} className="text-on-surface-variant hover:text-error p-1.5 rounded hover:bg-surface-container-high transition-colors" title="Delete Vendor">
                         <Trash2 className="h-4 w-4" />
                       </button>
                     </div>
@@ -575,6 +574,47 @@ export function Vendors() {
                   {viewMode === 'add' ? 'Tambah Vendor' : 'Simpan Perubahan'}
                 </button>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {vendorToDelete && (
+        <div
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-md"
+          onClick={() => setVendorToDelete(null)}
+        >
+          <div
+            className="bg-surface-container-lowest rounded-xl border border-outline-variant max-w-[420px] w-full"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="p-lg border-b border-outline-variant flex items-start gap-sm">
+              <div className="h-9 w-9 rounded-full bg-error/10 flex items-center justify-center flex-shrink-0">
+                <AlertTriangle className="h-5 w-5 text-error" />
+              </div>
+              <div>
+                <h3 className="font-headline-md text-headline-md text-primary">Hapus Vendor</h3>
+                <p className="font-body-sm text-body-sm text-on-surface-variant mt-1">
+                  Anda yakin ingin menghapus <span className="font-semibold text-on-surface">{vendorToDelete.name}</span>? Tindakan ini tidak dapat dibatalkan dan seluruh data vendor akan hilang secara permanen.
+                </p>
+              </div>
+            </div>
+            <div className="p-lg flex justify-end gap-sm">
+              <button
+                onClick={() => setVendorToDelete(null)}
+                className="border border-outline-variant text-on-surface-variant rounded-lg py-sm px-md font-label-caps text-label-caps hover:bg-surface-container-high transition-colors"
+              >
+                Batal
+              </button>
+              <button
+                onClick={() => {
+                  deleteVendor(vendorToDelete.id);
+                  setVendorToDelete(null);
+                }}
+                className="bg-error text-on-error rounded-lg py-sm px-md font-label-caps text-label-caps hover:bg-error/90 transition-colors"
+              >
+                Hapus Permanen
+              </button>
             </div>
           </div>
         </div>
