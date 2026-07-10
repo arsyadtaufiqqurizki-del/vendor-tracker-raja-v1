@@ -82,7 +82,7 @@ function AppContent() {
     name: '', category: '', subCategory: '', phone: '', email: '', salesPerson: '',
     documents: { 'NIB': '', 'Akta Pendirian': '', 'Akta Pengesahan': '', 'NPWP': '', 'PKP': '', 'Non PKP': '', 'Sertifikat': '', 'Dokumen Pendukung': '', 'Registration Form RAJA': '' },
     bankName: '', bankAccountName: '', bankAccount: '', npwpNumber: '', nibAddress: '', correspAddress: '', remarks: '',
-    status: '', statusColor: '', dotColor: ''
+    status: '', statusColor: '', dotColor: '', createdAt: new Date().toISOString()
   };
 
   return (

@@ -1,17 +1,51 @@
-import { useRef, useState, ChangeEvent } from 'react';
+import { useMemo, useRef, useState, ChangeEvent } from 'react';
 import { UserPlus, Filter, Search, MoreVertical, ChevronLeft, ChevronRight, Store, CheckCircle, Hourglass, AlertTriangle, Eye, Edit2, Trash2, X, Upload } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { useVendors } from '../contexts/VendorContext';
 import { Vendor } from '../types';
 import { documentFileName, getVendorDocumentUrl, removeVendorDocument, uploadVendorDocument } from '../lib/documentUpload';
 
+const DAY_MS = 24 * 60 * 60 * 1000;
+// Pending requests sitting untouched this long are flagged as needing action.
+const ACTION_REQUIRED_AFTER_DAYS = 3;
+
 export function Vendors() {
-  const { vendors, updateVendor, addVendor, deleteVendor } = useVendors();
+  const { vendors, vendorRequests, loading, updateVendor, addVendor, deleteVendor } = useVendors();
   const [selectedVendor, setSelectedVendor] = useState<Vendor | null>(null);
   const [viewMode, setViewMode] = useState<'view' | 'edit' | 'add'>('view');
   const [uploadingDoc, setUploadingDoc] = useState<string | null>(null);
   const pendingDoc = useRef<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const stats = useMemo(() => {
+    const now = Date.now();
+    const startOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1).getTime();
+    const sevenDaysAgo = now - 7 * DAY_MS;
+    const actionRequiredCutoff = now - ACTION_REQUIRED_AFTER_DAYS * DAY_MS;
+
+    const totalVendors = vendors.length;
+    const newThisMonth = vendors.filter(v => new Date(v.createdAt).getTime() >= startOfMonth).length;
+
+    const activeVendors = vendors.filter(v => v.status === 'Compliant').length;
+    const healthRate = totalVendors > 0 ? Math.round((activeVendors / totalVendors) * 100) : 0;
+
+    const pendingRequests = vendorRequests.filter(r => r.requestStatus === 'pending');
+    const actionRequired = pendingRequests.filter(r => new Date(r.submittedAt).getTime() <= actionRequiredCutoff).length;
+
+    const nonCompliantVendors = vendors.filter(v => v.error);
+    const newNonCompliantThisWeek = nonCompliantVendors.filter(v => new Date(v.createdAt).getTime() >= sevenDaysAgo).length;
+
+    return {
+      totalVendors,
+      newThisMonth,
+      activeVendors,
+      healthRate,
+      pendingCount: pendingRequests.length,
+      actionRequired,
+      nonCompliantCount: nonCompliantVendors.length,
+      newNonCompliantThisWeek,
+    };
+  }, [vendors, vendorRequests]);
 
   const handleDocumentChange = (docName: string, value: string) => {
     if (!selectedVendor) return;
@@ -93,7 +127,7 @@ export function Vendors() {
               name: '', category: '', subCategory: '', phone: '', email: '', salesPerson: '',
               documents: { 'NIB': '', 'Akta Pendirian': '', 'Akta Pengesahan': '', 'NPWP': '', 'PKP': '', 'Non PKP': '', 'Sertifikat': '', 'Dokumen Pendukung': '', 'Registration Form RAJA': '' },
               bankName: '', bankAccountName: '', bankAccount: '', npwpNumber: '', nibAddress: '', correspAddress: '', remarks: '',
-              status: '', statusColor: '', dotColor: ''
+              status: '', statusColor: '', dotColor: '', createdAt: new Date().toISOString()
             });
             setViewMode('add');
           }}
@@ -111,11 +145,22 @@ export function Vendors() {
             <Store className="h-16 w-16" />
           </div>
           <span className="font-label-caps text-label-caps text-outline uppercase tracking-wider mb-2">Total Vendors</span>
-          <span className="font-data-lg text-data-lg text-primary mb-2 z-10">{vendors.length}</span>
-          <div className="flex items-center gap-1 z-10">
-            <span className="text-on-tertiary-container bg-tertiary-fixed rounded-full px-1">↑</span>
-            <span className="font-body-sm text-body-sm text-on-surface-variant text-xs">+12 this month</span>
-          </div>
+          {loading ? (
+            <>
+              <div className="h-9 w-16 bg-surface-container-high rounded animate-pulse mb-2 z-10" />
+              <div className="h-4 w-28 bg-surface-container-high rounded animate-pulse z-10" />
+            </>
+          ) : (
+            <>
+              <span className="font-data-lg text-data-lg text-primary mb-2 z-10">{stats.totalVendors}</span>
+              <div className="flex items-center gap-1 z-10">
+                <span className="text-on-tertiary-container bg-tertiary-fixed rounded-full px-1">↑</span>
+                <span className="font-body-sm text-body-sm text-on-surface-variant text-xs">
+                  {stats.newThisMonth > 0 ? `+${stats.newThisMonth} this month` : 'No new vendors this month'}
+                </span>
+              </div>
+            </>
+          )}
         </div>
 
         <div className="bg-surface-container-lowest border border-outline-variant rounded-xl p-lg flex flex-col relative overflow-hidden group hover:shadow-md transition-shadow">
@@ -123,11 +168,20 @@ export function Vendors() {
             <CheckCircle className="h-16 w-16" />
           </div>
           <span className="font-label-caps text-label-caps text-outline uppercase tracking-wider mb-2">Active</span>
-          <span className="font-data-lg text-data-lg text-primary mb-2 z-10">{vendors.filter(v => v.status === 'Compliant').length}</span>
-          <div className="flex items-center gap-1 z-10">
-            <span className="text-on-tertiary-container bg-tertiary-fixed rounded-full px-1">↑</span>
-            <span className="font-body-sm text-body-sm text-on-surface-variant text-xs">87.5% health rate</span>
-          </div>
+          {loading ? (
+            <>
+              <div className="h-9 w-16 bg-surface-container-high rounded animate-pulse mb-2 z-10" />
+              <div className="h-4 w-28 bg-surface-container-high rounded animate-pulse z-10" />
+            </>
+          ) : (
+            <>
+              <span className="font-data-lg text-data-lg text-primary mb-2 z-10">{stats.activeVendors}</span>
+              <div className="flex items-center gap-1 z-10">
+                <span className="text-on-tertiary-container bg-tertiary-fixed rounded-full px-1">↑</span>
+                <span className="font-body-sm text-body-sm text-on-surface-variant text-xs">{stats.healthRate}% health rate</span>
+              </div>
+            </>
+          )}
         </div>
 
         <div className="bg-surface-container-lowest border border-outline-variant rounded-xl p-lg flex flex-col relative overflow-hidden group hover:shadow-md transition-shadow">
@@ -135,11 +189,22 @@ export function Vendors() {
             <Hourglass className="h-16 w-16" />
           </div>
           <span className="font-label-caps text-label-caps text-outline uppercase tracking-wider mb-2">Pending Verification</span>
-          <span className="font-data-lg text-data-lg text-primary mb-2 z-10">42</span>
-          <div className="flex items-center gap-1 z-10">
-            <span className="text-[#B45309] bg-[#FEF3C7] rounded-full px-1">⏱</span>
-            <span className="font-body-sm text-body-sm text-on-surface-variant text-xs">Action required on 15</span>
-          </div>
+          {loading ? (
+            <>
+              <div className="h-9 w-16 bg-surface-container-high rounded animate-pulse mb-2 z-10" />
+              <div className="h-4 w-28 bg-surface-container-high rounded animate-pulse z-10" />
+            </>
+          ) : (
+            <>
+              <span className="font-data-lg text-data-lg text-primary mb-2 z-10">{stats.pendingCount}</span>
+              <div className="flex items-center gap-1 z-10">
+                <span className="text-[#B45309] bg-[#FEF3C7] rounded-full px-1">⏱</span>
+                <span className="font-body-sm text-body-sm text-on-surface-variant text-xs">
+                  {stats.actionRequired > 0 ? `Action required on ${stats.actionRequired}` : 'All caught up'}
+                </span>
+              </div>
+            </>
+          )}
         </div>
 
         <div className="bg-surface-container-lowest border border-outline-variant rounded-xl p-lg flex flex-col relative overflow-hidden group hover:shadow-md transition-shadow">
@@ -147,11 +212,22 @@ export function Vendors() {
             <AlertTriangle className="h-16 w-16" />
           </div>
           <span className="font-label-caps text-label-caps text-outline uppercase tracking-wider mb-2">Non-Compliant</span>
-          <span className="font-data-lg text-data-lg text-error mb-2 z-10">{vendors.filter(v => v.error).length}</span>
-          <div className="flex items-center gap-1 z-10">
-            <span className="text-error bg-error-container rounded-full px-1">!</span>
-            <span className="font-body-sm text-body-sm text-error text-xs">-3 from last week</span>
-          </div>
+          {loading ? (
+            <>
+              <div className="h-9 w-16 bg-surface-container-high rounded animate-pulse mb-2 z-10" />
+              <div className="h-4 w-28 bg-surface-container-high rounded animate-pulse z-10" />
+            </>
+          ) : (
+            <>
+              <span className="font-data-lg text-data-lg text-error mb-2 z-10">{stats.nonCompliantCount}</span>
+              <div className="flex items-center gap-1 z-10">
+                <span className="text-error bg-error-container rounded-full px-1">!</span>
+                <span className="font-body-sm text-body-sm text-error text-xs">
+                  {stats.newNonCompliantThisWeek > 0 ? `+${stats.newNonCompliantThisWeek} new this week` : 'No new this week'}
+                </span>
+              </div>
+            </>
+          )}
         </div>
       </div>
 

@@ -22,6 +22,7 @@ export interface Vendor {
   icon?: string;
   color?: string;
   error?: boolean;
+  createdAt: string;
 }
 
 export type ProspectiveStatus = 'New' | 'In Discussion' | 'Converted';

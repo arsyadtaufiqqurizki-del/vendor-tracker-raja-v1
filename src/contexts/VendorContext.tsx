@@ -77,6 +77,7 @@ const vendorFromRow = (row: any): Vendor => {
     correspAddress: row.corresp_address,
     remarks: row.remarks,
     icon: row.icon ?? undefined,
+    createdAt: row.created_at,
     status: '',
     statusColor: '',
     dotColor: '',

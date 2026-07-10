@@ -179,6 +179,7 @@ export async function approveVendorRequest(request: VendorRequest): Promise<Vend
     status: '',
     statusColor: '',
     dotColor: '',
+    createdAt: new Date().toISOString(),
   };
 }
 
