@@ -11,7 +11,7 @@ interface VendorRequestFormProps {
 const DOCUMENT_TYPES = ['NIB', 'Akta Pendirian', 'Akta Pengesahan', 'NPWP', 'PKP', 'Non PKP', 'Sertifikat', 'Dokumen Pendukung', 'Registration Form RAJA'];
 
 const emptyForm: VendorRequestSubmission = {
-  name: '', category: '', subCategory: '', phone: '', email: '',
+  name: '', category: '', subCategory: '', phone: '', email: '', salesPerson: '',
   documents: Object.fromEntries(DOCUMENT_TYPES.map(doc => [doc, ''])),
   bankName: '', bankAccountName: '', bankAccount: '', npwpNumber: '', nibAddress: '', correspAddress: '', remarks: '',
 };
@@ -63,7 +63,8 @@ export function VendorRequestForm({ accessKey, onBack }: VendorRequestFormProps)
     form.bankAccount.trim() !== '' &&
     form.npwpNumber.trim() !== '' &&
     form.nibAddress.trim() !== '' &&
-    form.correspAddress.trim() !== '';
+    form.correspAddress.trim() !== '' &&
+    form.salesPerson.trim() !== '';
 
   const handleSubmit = async () => {
     if (!isValid) return;
@@ -144,6 +145,15 @@ export function VendorRequestForm({ accessKey, onBack }: VendorRequestFormProps)
               className="w-full bg-surface-bright border border-outline-variant rounded-lg px-3 py-2 text-on-surface focus:border-secondary focus:ring-1 focus:ring-secondary outline-none transition-colors"
               value={form.subCategory}
               onChange={(e) => setForm({ ...form, subCategory: e.target.value })}
+            />
+          </div>
+          <div>
+            <label className="block font-label-md text-on-surface-variant mb-1">Sales Person <span className="text-error">*</span></label>
+            <input
+              type="text"
+              className="w-full bg-surface-bright border border-outline-variant rounded-lg px-3 py-2 text-on-surface focus:border-secondary focus:ring-1 focus:ring-secondary outline-none transition-colors"
+              value={form.salesPerson}
+              onChange={(e) => setForm({ ...form, salesPerson: e.target.value })}
             />
           </div>
           <div>

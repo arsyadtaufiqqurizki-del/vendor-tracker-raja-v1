@@ -16,6 +16,7 @@ export interface VendorRequestSubmission {
   subCategory: string;
   phone: string;
   email: string;
+  salesPerson: string;
   documents: Record<string, string>;
   bankName: string;
   bankAccountName: string;
@@ -41,7 +42,7 @@ export async function submitVendorRequest(accessKey: string, id: string, data: V
     p_sub_category: data.subCategory,
     p_phone: data.phone,
     p_email: data.email,
-    p_sales_person: '',
+    p_sales_person: data.salesPerson,
     p_documents: data.documents,
     p_bank_name: data.bankName,
     p_bank_account_name: data.bankAccountName,
