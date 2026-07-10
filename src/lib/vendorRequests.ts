@@ -191,3 +191,49 @@ export async function rejectVendorRequest(id: string): Promise<void> {
     .eq('id', id);
   if (error) throw error;
 }
+
+// Storage "folders" are just path prefixes: an entry with id === null is a
+// pseudo-folder (Supabase synthesizes it from other objects' paths), so it
+// needs a recursive list() to reach the actual files inside it.
+async function listFilesUnderPrefix(prefix: string): Promise<string[]> {
+  const { data, error } = await supabase.storage.from(REQUEST_BUCKET).list(prefix, { limit: 1000 });
+  if (error) throw error;
+  const paths: string[] = [];
+  for (const entry of data ?? []) {
+    const entryPath = `${prefix}/${entry.name}`;
+    if (entry.id === null) {
+      paths.push(...(await listFilesUnderPrefix(entryPath)));
+    } else {
+      paths.push(entryPath);
+    }
+  }
+  return paths;
+}
+
+// Files land in this bucket as soon as a vendor uploads a document, before
+// they submit the request (see TODO_CLEANUP_ORPHANED_REQUEST_DOCUMENTS.MD).
+// A top-level folder is orphaned when its name (the request id) doesn't
+// match any row in vendor_requests — regardless of that row's status, since
+// approved/rejected requests still legitimately reference their folder.
+export async function listOrphanedRequestDocuments(): Promise<string[]> {
+  const { data: topLevel, error } = await supabase.storage.from(REQUEST_BUCKET).list('', { limit: 1000 });
+  if (error) throw error;
+
+  const { data: requestRows, error: reqError } = await supabase.from('vendor_requests').select('id');
+  if (reqError) throw reqError;
+  const knownIds = new Set((requestRows ?? []).map((r) => r.id as string));
+
+  const orphanedFolders = (topLevel ?? []).filter((entry) => entry.id === null && !knownIds.has(entry.name));
+
+  const paths: string[] = [];
+  for (const folder of orphanedFolders) {
+    paths.push(...(await listFilesUnderPrefix(folder.name)));
+  }
+  return paths;
+}
+
+export async function deleteRequestDocuments(paths: string[]): Promise<void> {
+  if (paths.length === 0) return;
+  const { error } = await supabase.storage.from(REQUEST_BUCKET).remove(paths);
+  if (error) throw error;
+}

@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
-import { Ban, Check, Eye, KeyRound, Plus, Trash2 } from 'lucide-react';
+import { Ban, Check, Eraser, Eye, KeyRound, Plus, Trash2 } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { useVendors } from '../contexts/VendorContext';
 import { AccessKey, VendorRequest, VendorRequestStatus } from '../types';
 import { VendorRequestDetailModal } from '../components/VendorRequestDetailModal';
 import { listAccessKeys, generateAccessKey, setAccessKeyActive, deleteAccessKey } from '../lib/accessKeys';
+import { listOrphanedRequestDocuments, deleteRequestDocuments } from '../lib/vendorRequests';
 
 type RequestFilter = 'Semua' | 'Pending' | 'Rejected' | 'Approved';
 type Tab = 'permintaan' | 'accessKey';
@@ -37,6 +38,10 @@ export function RequestForm() {
   const [loadingKeys, setLoadingKeys] = useState(false);
   const [generatingKey, setGeneratingKey] = useState(false);
   const [newlyGeneratedCode, setNewlyGeneratedCode] = useState<string | null>(null);
+
+  const [orphanedPaths, setOrphanedPaths] = useState<string[] | null>(null);
+  const [scanningOrphans, setScanningOrphans] = useState(false);
+  const [deletingOrphans, setDeletingOrphans] = useState(false);
 
   const refreshAccessKeys = async () => {
     setLoadingKeys(true);
@@ -112,6 +117,30 @@ export function RequestForm() {
     }
   };
 
+  const handleScanOrphans = async () => {
+    setScanningOrphans(true);
+    try {
+      setOrphanedPaths(await listOrphanedRequestDocuments());
+    } catch (err) {
+      alert(`Gagal memindai file: ${(err as Error).message}`);
+    } finally {
+      setScanningOrphans(false);
+    }
+  };
+
+  const handleConfirmDeleteOrphans = async () => {
+    if (!orphanedPaths || orphanedPaths.length === 0) return;
+    setDeletingOrphans(true);
+    try {
+      await deleteRequestDocuments(orphanedPaths);
+      setOrphanedPaths(null);
+    } catch (err) {
+      alert(`Gagal menghapus file: ${(err as Error).message}`);
+    } finally {
+      setDeletingOrphans(false);
+    }
+  };
+
   return (
     <div className="flex flex-col gap-lg pb-xl">
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-md mb-xs border-b border-outline-variant pb-sm">
@@ -146,16 +175,27 @@ export function RequestForm() {
         <div className="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden flex flex-col">
           <div className="p-lg border-b border-outline-variant flex flex-col sm:flex-row justify-between items-start sm:items-center gap-md bg-surface-bright">
             <h3 className="font-headline-md text-headline-md text-primary">Daftar Permintaan</h3>
-            <select
-              value={filter}
-              onChange={(e) => setFilter(e.target.value as RequestFilter)}
-              className="bg-surface border border-outline-variant rounded-lg py-1.5 px-3 font-body-sm text-body-sm text-on-surface focus:border-secondary focus:ring-1 focus:ring-secondary outline-none transition-colors"
-            >
-              <option value="Pending">Pending</option>
-              <option value="Rejected">Rejected</option>
-              <option value="Approved">Approved</option>
-              <option value="Semua">Semua</option>
-            </select>
+            <div className="flex items-center gap-sm">
+              <button
+                onClick={handleScanOrphans}
+                disabled={scanningOrphans}
+                title="Cari file dokumen yang sudah terupload tapi request-nya tidak pernah disubmit"
+                className="border border-outline-variant text-on-surface-variant rounded-lg py-1.5 px-3 flex items-center gap-xs font-label-caps text-label-caps hover:bg-surface-container-high transition-colors disabled:opacity-50"
+              >
+                <Eraser className="h-4 w-4" />
+                {scanningOrphans ? 'Memindai...' : 'Bersihkan File Belum Submit'}
+              </button>
+              <select
+                value={filter}
+                onChange={(e) => setFilter(e.target.value as RequestFilter)}
+                className="bg-surface border border-outline-variant rounded-lg py-1.5 px-3 font-body-sm text-body-sm text-on-surface focus:border-secondary focus:ring-1 focus:ring-secondary outline-none transition-colors"
+              >
+                <option value="Pending">Pending</option>
+                <option value="Rejected">Rejected</option>
+                <option value="Approved">Approved</option>
+                <option value="Semua">Semua</option>
+              </select>
+            </div>
           </div>
           <div className="overflow-x-auto w-full">
             <table className="w-full text-left border-collapse min-w-[800px]">
@@ -306,6 +346,54 @@ export function RequestForm() {
 
       {selectedRequest && (
         <VendorRequestDetailModal request={selectedRequest} onClose={() => setSelectedRequest(null)} />
+      )}
+
+      {orphanedPaths !== null && (
+        <div
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-md"
+          onClick={() => !deletingOrphans && setOrphanedPaths(null)}
+        >
+          <div
+            className="bg-surface-container-lowest rounded-xl border border-outline-variant max-w-2xl w-full max-h-[80vh] flex flex-col"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="p-lg border-b border-outline-variant">
+              <h3 className="font-headline-md text-headline-md text-primary">File Belum Submit</h3>
+              <p className="font-body-sm text-body-sm text-on-surface-variant mt-1">
+                {orphanedPaths.length === 0
+                  ? 'Tidak ada file yang perlu dibersihkan — semua file di bucket sudah terkait request yang tersimpan.'
+                  : `Ditemukan ${orphanedPaths.length} file yang terupload tapi request-nya tidak pernah disubmit. File berikut akan dihapus permanen dari storage:`}
+              </p>
+            </div>
+            {orphanedPaths.length > 0 && (
+              <div className="overflow-y-auto p-lg flex-1">
+                <ul className="font-body-sm text-body-sm text-on-surface-variant space-y-1 list-disc list-inside break-all">
+                  {orphanedPaths.map((p) => (
+                    <li key={p}>{p}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            <div className="p-lg border-t border-outline-variant flex justify-end gap-sm">
+              <button
+                onClick={() => setOrphanedPaths(null)}
+                disabled={deletingOrphans}
+                className="border border-outline-variant text-on-surface-variant rounded-lg py-sm px-md font-label-caps text-label-caps hover:bg-surface-container-high transition-colors disabled:opacity-50"
+              >
+                {orphanedPaths.length === 0 ? 'Tutup' : 'Batal'}
+              </button>
+              {orphanedPaths.length > 0 && (
+                <button
+                  onClick={handleConfirmDeleteOrphans}
+                  disabled={deletingOrphans}
+                  className="bg-error text-on-error rounded-lg py-sm px-md font-label-caps text-label-caps hover:bg-error/90 transition-colors disabled:opacity-50"
+                >
+                  {deletingOrphans ? 'Menghapus...' : `Hapus ${orphanedPaths.length} File`}
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

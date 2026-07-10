@@ -201,3 +201,10 @@ create policy "authenticated read vendor request documents"
 on storage.objects for select
 to authenticated
 using (bucket_id = 'vendor-request-documents');
+
+-- Lets staff clean up files left behind when a vendor uploads a document but
+-- never submits the request (see TODO_CLEANUP_ORPHANED_REQUEST_DOCUMENTS.MD).
+create policy "authenticated delete vendor request documents"
+on storage.objects for delete
+to authenticated
+using (bucket_id = 'vendor-request-documents');
