@@ -192,14 +192,47 @@ export async function rejectVendorRequest(id: string): Promise<void> {
   if (error) throw error;
 }
 
+// list()/select() both default to a 1000-row page; a bare call silently
+// truncates once a folder or the vendor_requests table grows past that, so
+// every listing here pages through to the end instead of trusting one call.
+const PAGE_SIZE = 1000;
+
+async function listAllEntries(prefix: string) {
+  const entries: { name: string; id: string | null }[] = [];
+  let offset = 0;
+  for (;;) {
+    const { data, error } = await supabase.storage.from(REQUEST_BUCKET).list(prefix, { limit: PAGE_SIZE, offset });
+    if (error) throw error;
+    entries.push(...(data ?? []));
+    if (!data || data.length < PAGE_SIZE) break;
+    offset += PAGE_SIZE;
+  }
+  return entries;
+}
+
+async function fetchKnownRequestIds(): Promise<Set<string>> {
+  const ids: string[] = [];
+  let offset = 0;
+  for (;;) {
+    const { data, error } = await supabase
+      .from('vendor_requests')
+      .select('id')
+      .range(offset, offset + PAGE_SIZE - 1);
+    if (error) throw error;
+    ids.push(...(data ?? []).map((r) => r.id as string));
+    if (!data || data.length < PAGE_SIZE) break;
+    offset += PAGE_SIZE;
+  }
+  return new Set(ids);
+}
+
 // Storage "folders" are just path prefixes: an entry with id === null is a
 // pseudo-folder (Supabase synthesizes it from other objects' paths), so it
 // needs a recursive list() to reach the actual files inside it.
 async function listFilesUnderPrefix(prefix: string): Promise<string[]> {
-  const { data, error } = await supabase.storage.from(REQUEST_BUCKET).list(prefix, { limit: 1000 });
-  if (error) throw error;
+  const entries = await listAllEntries(prefix);
   const paths: string[] = [];
-  for (const entry of data ?? []) {
+  for (const entry of entries) {
     const entryPath = `${prefix}/${entry.name}`;
     if (entry.id === null) {
       paths.push(...(await listFilesUnderPrefix(entryPath)));
@@ -216,14 +249,10 @@ async function listFilesUnderPrefix(prefix: string): Promise<string[]> {
 // match any row in vendor_requests — regardless of that row's status, since
 // approved/rejected requests still legitimately reference their folder.
 export async function listOrphanedRequestDocuments(): Promise<string[]> {
-  const { data: topLevel, error } = await supabase.storage.from(REQUEST_BUCKET).list('', { limit: 1000 });
-  if (error) throw error;
+  const topLevel = await listAllEntries('');
+  const knownIds = await fetchKnownRequestIds();
 
-  const { data: requestRows, error: reqError } = await supabase.from('vendor_requests').select('id');
-  if (reqError) throw reqError;
-  const knownIds = new Set((requestRows ?? []).map((r) => r.id as string));
-
-  const orphanedFolders = (topLevel ?? []).filter((entry) => entry.id === null && !knownIds.has(entry.name));
+  const orphanedFolders = topLevel.filter((entry) => entry.id === null && !knownIds.has(entry.name));
 
   const paths: string[] = [];
   for (const folder of orphanedFolders) {
@@ -234,6 +263,12 @@ export async function listOrphanedRequestDocuments(): Promise<string[]> {
 
 export async function deleteRequestDocuments(paths: string[]): Promise<void> {
   if (paths.length === 0) return;
-  const { error } = await supabase.storage.from(REQUEST_BUCKET).remove(paths);
+  // Re-check right before deleting: a vendor may have submitted the request
+  // for one of these folders in the gap between the scan and this confirm
+  // click, in which case it's no longer orphaned and must be kept.
+  const knownIds = await fetchKnownRequestIds();
+  const safePaths = paths.filter((p) => !knownIds.has(p.split('/')[0]));
+  if (safePaths.length === 0) return;
+  const { error } = await supabase.storage.from(REQUEST_BUCKET).remove(safePaths);
   if (error) throw error;
 }
