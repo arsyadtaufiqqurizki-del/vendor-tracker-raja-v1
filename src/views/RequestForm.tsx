@@ -316,6 +316,7 @@ export function RequestForm() {
                 <tr className="bg-surface-bright border-b border-outline-variant font-label-caps text-label-caps text-on-surface-variant uppercase">
                   <th className="p-md font-semibold">KODE</th>
                   <th className="p-md font-semibold">DIBUAT</th>
+                  <th className="p-md font-semibold">BERLAKU HINGGA</th>
                   <th className="p-md font-semibold">STATUS</th>
                   <th className="p-md font-semibold text-right">AKSI</th>
                 </tr>
@@ -323,17 +324,20 @@ export function RequestForm() {
               <tbody className="font-body-sm text-body-sm text-on-surface divide-y divide-surface-container-highest">
                 {loadingKeys ? (
                   <tr>
-                    <td colSpan={4} className="p-md text-center text-on-surface-variant">Memuat...</td>
+                    <td colSpan={5} className="p-md text-center text-on-surface-variant">Memuat...</td>
                   </tr>
                 ) : accessKeys.length === 0 ? (
                   <tr>
-                    <td colSpan={4} className="p-md text-center text-on-surface-variant">Belum ada access key.</td>
+                    <td colSpan={5} className="p-md text-center text-on-surface-variant">Belum ada access key.</td>
                   </tr>
                 ) : (
-                  accessKeys.map((k) => (
+                  accessKeys.map((k) => {
+                    const expired = new Date(k.expiresAt).getTime() < Date.now();
+                    return (
                     <tr key={k.code} className="hover:bg-surface-container-low transition-colors">
                       <td className="p-md text-primary font-data-lg text-data-lg tracking-widest">{k.code}</td>
                       <td className="p-md text-on-surface-variant">{new Date(k.createdAt).toLocaleString('id-ID')}</td>
+                      <td className={cn("p-md", expired ? "text-error" : "text-on-surface-variant")}>{new Date(k.expiresAt).toLocaleString('id-ID')}</td>
                       <td className="p-md">
                         <span className={cn("inline-flex items-center px-2.5 py-1 rounded-full text-[12px] font-medium",
                           k.active ? "text-on-tertiary-container bg-tertiary-fixed/20" : "text-on-surface-variant bg-surface-container-high"
@@ -360,7 +364,8 @@ export function RequestForm() {
                         </div>
                       </td>
                     </tr>
-                  ))
+                    );
+                  })
                 )}
               </tbody>
             </table>

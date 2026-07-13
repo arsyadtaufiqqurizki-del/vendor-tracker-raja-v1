@@ -5,6 +5,7 @@ const accessKeyFromRow = (row: any): AccessKey => ({
   code: row.code,
   active: row.active,
   createdAt: row.created_at,
+  expiresAt: row.expires_at,
 });
 
 export async function listAccessKeys(): Promise<AccessKey[]> {

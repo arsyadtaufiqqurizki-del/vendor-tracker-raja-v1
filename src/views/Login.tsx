@@ -2,11 +2,19 @@ import { useState, FormEvent } from 'react';
 import { Factory, KeyRound, Lock, Mail } from 'lucide-react';
 import { motion } from 'motion/react';
 import { supabase } from '../lib/supabase';
-import { checkAccessKey } from '../lib/vendorRequests';
+import { checkAccessKey, AccessKeyCheckReason } from '../lib/vendorRequests';
 import { VendorRequestForm } from '../components/VendorRequestForm';
 import { cn } from '../lib/utils';
 
 type LoginMode = 'staff' | 'vendor-key' | 'vendor-form';
+
+const accessKeyErrorMessages: Record<AccessKeyCheckReason, string> = {
+  ok: '',
+  invalid: 'Kode akses tidak valid.',
+  inactive: 'Kode akses sudah tidak aktif.',
+  expired: 'Kode akses sudah kedaluwarsa.',
+  locked: 'Terlalu banyak percobaan gagal. Coba lagi dalam 15 menit.',
+};
 
 export function Login() {
   const [mode, setMode] = useState<LoginMode>('staff');
@@ -38,11 +46,11 @@ export function Login() {
     setKeyError('');
     setIsCheckingKey(true);
     try {
-      const valid = await checkAccessKey(accessKey);
-      if (valid) {
+      const result = await checkAccessKey(accessKey);
+      if (result.valid) {
         setMode('vendor-form');
       } else {
-        setKeyError('Kode akses tidak valid.');
+        setKeyError(accessKeyErrorMessages[result.reason]);
       }
     } catch (err) {
       setKeyError((err as Error).message);

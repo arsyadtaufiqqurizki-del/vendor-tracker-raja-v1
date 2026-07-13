@@ -65,4 +65,5 @@ export interface AccessKey {
   code: string;
   active: boolean;
   createdAt: string;
+  expiresAt: string;
 }

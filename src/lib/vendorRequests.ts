@@ -4,10 +4,17 @@ import { Vendor, VendorRequest } from '../types';
 
 const REQUEST_BUCKET = 'vendor-request-documents';
 
-export async function checkAccessKey(code: string): Promise<boolean> {
+export type AccessKeyCheckReason = 'ok' | 'invalid' | 'inactive' | 'expired' | 'locked';
+
+export interface AccessKeyCheckResult {
+  valid: boolean;
+  reason: AccessKeyCheckReason;
+}
+
+export async function checkAccessKey(code: string): Promise<AccessKeyCheckResult> {
   const { data, error } = await supabase.rpc('check_vendor_access_key', { p_code: code });
   if (error) throw error;
-  return data === true;
+  return data as AccessKeyCheckResult;
 }
 
 export interface VendorRequestSubmission {
