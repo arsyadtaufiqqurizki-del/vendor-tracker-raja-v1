@@ -192,6 +192,23 @@ export async function rejectVendorRequest(id: string): Promise<void> {
   if (error) throw error;
 }
 
+// Only for already-reviewed requests (approved/rejected) — pending requests
+// still need a staff decision, so the UI doesn't offer this action for them.
+// Also removes the request's documents from the request-only bucket: for an
+// approved request those files were already copied into vendor-documents
+// (see moveRequestDocumentsToVendorBucket), so the request-bucket copies are
+// redundant once the row is gone; for a rejected request they're unused.
+export async function deleteVendorRequest(request: VendorRequest): Promise<void> {
+  const paths = Object.values(request.documents).filter(Boolean);
+  if (paths.length > 0) {
+    const { error: storageError } = await supabase.storage.from(REQUEST_BUCKET).remove(paths);
+    if (storageError) throw storageError;
+  }
+
+  const { error } = await supabase.from('vendor_requests').delete().eq('id', request.id);
+  if (error) throw error;
+}
+
 // list()/select() both default to a 1000-row page; a bare call silently
 // truncates once a folder or the vendor_requests table grows past that, so
 // every listing here pages through to the end instead of trusting one call.

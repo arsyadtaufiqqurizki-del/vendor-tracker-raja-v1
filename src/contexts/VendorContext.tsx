@@ -5,6 +5,7 @@ import {
   listVendorRequests,
   approveVendorRequest as approveVendorRequestApi,
   rejectVendorRequest as rejectVendorRequestApi,
+  deleteVendorRequest as deleteVendorRequestApi,
 } from '../lib/vendorRequests';
 
 interface VendorContextType {
@@ -20,6 +21,7 @@ interface VendorContextType {
   deleteProspectiveVendor: (id: string) => void;
   approveVendorRequest: (request: VendorRequest) => Promise<void>;
   rejectVendorRequest: (id: string) => Promise<void>;
+  deleteVendorRequest: (request: VendorRequest) => Promise<void>;
   calculateCompliance: (docs: Record<string, string>) => any;
 }
 
@@ -230,8 +232,13 @@ export function VendorProvider({ children }: { children: ReactNode }) {
     setVendorRequests(vendorRequests.map(r => r.id === id ? { ...r, requestStatus: 'rejected' } : r));
   };
 
+  const deleteVendorRequest = async (request: VendorRequest) => {
+    await deleteVendorRequestApi(request);
+    setVendorRequests(vendorRequests.filter(r => r.id !== request.id));
+  };
+
   return (
-    <VendorContext.Provider value={{ vendors, prospectiveVendors, vendorRequests, loading, updateVendor, addVendor, deleteVendor, addProspectiveVendor, updateProspectiveVendor, deleteProspectiveVendor, approveVendorRequest, rejectVendorRequest, calculateCompliance }}>
+    <VendorContext.Provider value={{ vendors, prospectiveVendors, vendorRequests, loading, updateVendor, addVendor, deleteVendor, addProspectiveVendor, updateProspectiveVendor, deleteProspectiveVendor, approveVendorRequest, rejectVendorRequest, deleteVendorRequest, calculateCompliance }}>
       {children}
     </VendorContext.Provider>
   );

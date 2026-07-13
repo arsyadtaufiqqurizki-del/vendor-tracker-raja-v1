@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Ban, Check, Eraser, Eye, KeyRound, Plus, Trash2 } from 'lucide-react';
+import { AlertTriangle, Ban, Check, Eraser, Eye, KeyRound, Plus, Trash2 } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { useVendors } from '../contexts/VendorContext';
 import { AccessKey, VendorRequest, VendorRequestStatus } from '../types';
@@ -28,11 +28,13 @@ function StatusBadge({ status }: { status: VendorRequestStatus }) {
 }
 
 export function RequestForm() {
-  const { vendorRequests, approveVendorRequest, rejectVendorRequest } = useVendors();
+  const { vendorRequests, approveVendorRequest, rejectVendorRequest, deleteVendorRequest } = useVendors();
   const [tab, setTab] = useState<Tab>('permintaan');
   const [filter, setFilter] = useState<RequestFilter>('Pending');
   const [selectedRequest, setSelectedRequest] = useState<VendorRequest | null>(null);
   const [processingId, setProcessingId] = useState<string | null>(null);
+  const [requestToDelete, setRequestToDelete] = useState<VendorRequest | null>(null);
+  const [deletingRequest, setDeletingRequest] = useState(false);
 
   const [accessKeys, setAccessKeys] = useState<AccessKey[]>([]);
   const [loadingKeys, setLoadingKeys] = useState(false);
@@ -81,6 +83,19 @@ export function RequestForm() {
       alert(`Gagal menolak request: ${(err as Error).message}`);
     } finally {
       setProcessingId(null);
+    }
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!requestToDelete) return;
+    setDeletingRequest(true);
+    try {
+      await deleteVendorRequest(requestToDelete);
+      setRequestToDelete(null);
+    } catch (err) {
+      alert(`Gagal menghapus request: ${(err as Error).message}`);
+    } finally {
+      setDeletingRequest(false);
     }
   };
 
@@ -251,6 +266,15 @@ export function RequestForm() {
                               <Ban className="h-4 w-4" />
                             </button>
                           )}
+                          {(r.requestStatus === 'approved' || r.requestStatus === 'rejected') && (
+                            <button
+                              onClick={() => setRequestToDelete(r)}
+                              className="text-error hover:bg-error-container/50 p-1.5 rounded transition-colors"
+                              title="Hapus"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </button>
+                          )}
                         </div>
                       </td>
                     </tr>
@@ -346,6 +370,46 @@ export function RequestForm() {
 
       {selectedRequest && (
         <VendorRequestDetailModal request={selectedRequest} onClose={() => setSelectedRequest(null)} />
+      )}
+
+      {requestToDelete && (
+        <div
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-md"
+          onClick={() => !deletingRequest && setRequestToDelete(null)}
+        >
+          <div
+            className="bg-surface-container-lowest rounded-xl border border-outline-variant max-w-[420px] w-full"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="p-lg border-b border-outline-variant flex items-start gap-sm">
+              <div className="h-9 w-9 rounded-full bg-error/10 flex items-center justify-center flex-shrink-0">
+                <AlertTriangle className="h-5 w-5 text-error" />
+              </div>
+              <div>
+                <h3 className="font-headline-md text-headline-md text-primary">Hapus Request</h3>
+                <p className="font-body-sm text-body-sm text-on-surface-variant mt-1">
+                  Anda yakin ingin menghapus request <span className="font-semibold text-on-surface">{requestToDelete.name}</span>? Dokumen yang terupload untuk request ini juga akan dihapus dari storage. Tindakan ini tidak dapat dibatalkan.
+                </p>
+              </div>
+            </div>
+            <div className="p-lg flex justify-end gap-sm">
+              <button
+                onClick={() => setRequestToDelete(null)}
+                disabled={deletingRequest}
+                className="border border-outline-variant text-on-surface-variant rounded-lg py-sm px-md font-label-caps text-label-caps hover:bg-surface-container-high transition-colors disabled:opacity-50"
+              >
+                Batal
+              </button>
+              <button
+                onClick={handleConfirmDelete}
+                disabled={deletingRequest}
+                className="bg-error text-on-error rounded-lg py-sm px-md font-label-caps text-label-caps hover:bg-error/90 transition-colors disabled:opacity-50"
+              >
+                {deletingRequest ? 'Menghapus...' : 'Hapus Permanen'}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       {orphanedPaths !== null && (
