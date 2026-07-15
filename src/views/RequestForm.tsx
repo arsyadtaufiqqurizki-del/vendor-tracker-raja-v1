@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { AlertTriangle, Ban, Check, Eraser, Eye, KeyRound, Plus, Trash2 } from 'lucide-react';
+import { AlertTriangle, Ban, Check, Eraser, Eye, KeyRound, Loader2, Plus, Trash2 } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { useVendors } from '../contexts/VendorContext';
 import { AccessKey, VendorRequest, VendorRequestStatus } from '../types';
@@ -253,7 +253,11 @@ export function RequestForm() {
                               className="text-on-tertiary-container hover:bg-tertiary-fixed/20 p-1.5 rounded transition-colors disabled:opacity-50"
                               title="Accept"
                             >
-                              <Check className="h-4 w-4" />
+                              {processingId === r.id ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                              ) : (
+                                <Check className="h-4 w-4" />
+                              )}
                             </button>
                           )}
                           {r.requestStatus === 'pending' && (
@@ -263,7 +267,11 @@ export function RequestForm() {
                               className="text-error hover:bg-error-container/50 p-1.5 rounded transition-colors disabled:opacity-50"
                               title="Reject"
                             >
-                              <Ban className="h-4 w-4" />
+                              {processingId === r.id ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                              ) : (
+                                <Ban className="h-4 w-4" />
+                              )}
                             </button>
                           )}
                           {(r.requestStatus === 'approved' || r.requestStatus === 'rejected') && (
