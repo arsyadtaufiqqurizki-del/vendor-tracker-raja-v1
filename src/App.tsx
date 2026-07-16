@@ -7,6 +7,7 @@ import { Vendors } from './views/Vendors';
 import { ProspectiveVendors } from './views/ProspectiveVendors';
 import { Compliance } from './views/Compliance';
 import { RequestForm } from './views/RequestForm';
+import { Settings } from './views/Settings';
 import { Login } from './views/Login';
 import { ViewType, Vendor } from './types';
 import { VendorProvider, useVendors } from './contexts/VendorContext';
@@ -62,6 +63,8 @@ function AppContent() {
         return <Compliance />;
       case 'requestForm':
         return <RequestForm />;
+      case 'settings':
+        return <Settings userEmail={session.user.email} onLogout={() => supabase.auth.signOut()} onNavigate={setCurrentView} />;
       default:
         return <Dashboard />;
     }
@@ -74,6 +77,7 @@ function AppContent() {
       case 'prospectiveVendors': return 'Prospective Vendors';
       case 'compliance': return 'Compliance';
       case 'requestForm': return 'Request Form';
+      case 'settings': return 'Settings';
     }
   };
 
@@ -100,9 +104,12 @@ function AppContent() {
       />
       
       <div className="flex-1 flex flex-col md:ml-[280px] min-w-0">
-        <TopNav 
-          title={getTitle()} 
-          onMenuClick={() => setIsMobileMenuOpen(true)} 
+        <TopNav
+          title={getTitle()}
+          onMenuClick={() => setIsMobileMenuOpen(true)}
+          userEmail={session.user.email}
+          onLogout={() => supabase.auth.signOut()}
+          onNavigate={setCurrentView}
         />
         
         <main className="flex-1 overflow-y-auto p-md lg:p-lg no-scrollbar">

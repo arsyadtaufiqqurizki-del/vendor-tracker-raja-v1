@@ -1,4 +1,4 @@
-export type ViewType = 'dashboard' | 'vendors' | 'prospectiveVendors' | 'compliance' | 'requestForm';
+export type ViewType = 'dashboard' | 'vendors' | 'prospectiveVendors' | 'compliance' | 'requestForm' | 'settings';
 
 export interface Vendor {
   id: string;
