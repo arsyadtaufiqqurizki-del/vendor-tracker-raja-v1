@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState, ChangeEvent } from 'react';
+import { useEffect, useMemo, useRef, useState, ChangeEvent } from 'react';
 import { UserPlus, Filter, Search, MoreVertical, ChevronLeft, ChevronRight, Store, CheckCircle, Hourglass, AlertTriangle, Eye, Edit2, Trash2, X, Upload } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { useVendors } from '../contexts/VendorContext';
@@ -15,8 +15,54 @@ export function Vendors() {
   const [viewMode, setViewMode] = useState<'view' | 'edit' | 'add'>('view');
   const [uploadingDoc, setUploadingDoc] = useState<string | null>(null);
   const [vendorToDelete, setVendorToDelete] = useState<Vendor | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [categoryFilter, setCategoryFilter] = useState('All');
+  const [statusFilter, setStatusFilter] = useState<'All' | 'Compliant' | 'Non-Compliant'>('All');
+  const [currentPage, setCurrentPage] = useState(1);
+  const ROWS_PER_PAGE = 10;
   const pendingDoc = useRef<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const categories = useMemo(
+    () => Array.from(new Set(vendors.map(v => v.category).filter(Boolean))).sort(),
+    [vendors]
+  );
+
+  const filteredVendors = useMemo(() => {
+    const term = searchTerm.trim().toLowerCase();
+    return vendors.filter(vendor => {
+      const matchesSearch = !term ||
+        vendor.name.toLowerCase().includes(term) ||
+        vendor.category.toLowerCase().includes(term) ||
+        vendor.id.toLowerCase().includes(term);
+      const matchesCategory = categoryFilter === 'All' || vendor.category === categoryFilter;
+      const matchesStatus =
+        statusFilter === 'All' ||
+        (statusFilter === 'Compliant' && !vendor.error) ||
+        (statusFilter === 'Non-Compliant' && !!vendor.error);
+      return matchesSearch && matchesCategory && matchesStatus;
+    });
+  }, [vendors, searchTerm, categoryFilter, statusFilter]);
+
+  const handleResetFilters = () => {
+    setSearchTerm('');
+    setCategoryFilter('All');
+    setStatusFilter('All');
+  };
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, categoryFilter, statusFilter]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredVendors.length / ROWS_PER_PAGE));
+  const paginatedVendors = filteredVendors.slice(
+    (currentPage - 1) * ROWS_PER_PAGE,
+    currentPage * ROWS_PER_PAGE
+  );
+
+  useEffect(() => {
+    if (currentPage > totalPages) setCurrentPage(totalPages);
+  }, [currentPage, totalPages]);
 
   const stats = useMemo(() => {
     const now = Date.now();
@@ -235,7 +281,7 @@ export function Vendors() {
       {/* Data Table */}
       <div className="bg-surface-container-lowest border border-outline-variant rounded-xl flex flex-col shadow-sm overflow-hidden">
         <div className="p-md border-b border-outline-variant flex flex-col sm:flex-row gap-sm justify-between items-center bg-surface-bright">
-          <div className="relative w-full sm:max-w-xs">
+          <div className="relative w-full sm:flex-1 sm:w-64">
             <div className="absolute inset-y-0 left-0 pl-sm flex items-center pointer-events-none">
               <Search className="text-on-surface-variant h-4 w-4" />
             </div>
@@ -243,16 +289,37 @@ export function Vendors() {
               type="text"
               className="block w-full pl-xl pr-sm py-xs border border-outline-variant rounded-md bg-surface text-on-surface font-body-sm text-body-sm focus:ring-1 focus:ring-secondary focus:border-secondary transition-colors outline-none h-10"
               placeholder="Filter vendors..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
           <div className="flex items-center gap-sm w-full sm:w-auto overflow-x-auto pb-1 sm:pb-0">
-            <button className="flex items-center gap-1 px-sm py-xs border border-outline-variant rounded-md bg-surface hover:bg-surface-container-low text-on-surface font-body-sm text-body-sm h-10 whitespace-nowrap">
-              <Filter className="h-4 w-4" /> Category
-            </button>
-            <button className="flex items-center gap-1 px-sm py-xs border border-outline-variant rounded-md bg-surface hover:bg-surface-container-low text-on-surface font-body-sm text-body-sm h-10 whitespace-nowrap">
-              Status
-            </button>
-            <button className="flex items-center gap-1 px-sm py-xs text-secondary hover:bg-secondary-fixed rounded-md font-body-sm text-body-sm h-10 whitespace-nowrap transition-colors ml-auto sm:ml-0">
+            <div className="relative">
+              <Filter className="absolute left-sm top-1/2 -translate-y-1/2 text-on-surface-variant h-4 w-4 pointer-events-none" />
+              <select
+                className="appearance-none pl-xl pr-sm py-xs border border-outline-variant rounded-md bg-surface hover:bg-surface-container-low text-on-surface font-body-sm text-body-sm h-10 whitespace-nowrap outline-none focus:ring-1 focus:ring-secondary focus:border-secondary"
+                value={categoryFilter}
+                onChange={(e) => setCategoryFilter(e.target.value)}
+              >
+                <option value="All">All Categories</option>
+                {categories.map((cat) => (
+                  <option key={cat} value={cat}>{cat}</option>
+                ))}
+              </select>
+            </div>
+            <select
+              className="px-sm py-xs border border-outline-variant rounded-md bg-surface hover:bg-surface-container-low text-on-surface font-body-sm text-body-sm h-10 whitespace-nowrap outline-none focus:ring-1 focus:ring-secondary focus:border-secondary"
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value as any)}
+            >
+              <option value="All">All Status</option>
+              <option value="Compliant">Compliant</option>
+              <option value="Non-Compliant">Non-Compliant</option>
+            </select>
+            <button
+              onClick={handleResetFilters}
+              className="flex items-center gap-1 px-sm py-xs text-secondary hover:bg-secondary-fixed rounded-md font-body-sm text-body-sm h-10 whitespace-nowrap transition-colors ml-auto sm:ml-0"
+            >
               Reset
             </button>
           </div>
@@ -272,7 +339,12 @@ export function Vendors() {
               </tr>
             </thead>
             <tbody className="divide-y divide-outline-variant">
-              {vendors.map((vendor) => (
+              {filteredVendors.length === 0 ? (
+                <tr>
+                  <td colSpan={7} className="px-sm py-sm text-center text-on-surface-variant">No vendors found.</td>
+                </tr>
+              ) : (
+              paginatedVendors.map((vendor) => (
                 <tr key={vendor.id} className={cn("bg-surface-container-lowest hover:bg-[#F1F5F9] transition-colors group cursor-pointer", vendor.error && "border-l-4 border-l-error")}>
                   <td className={cn("px-sm py-sm", vendor.error && "pl-2")}>
                     <div className="flex items-center gap-sm">
@@ -309,23 +381,35 @@ export function Vendors() {
                     </div>
                   </td>
                 </tr>
-              ))}
+              )))}
             </tbody>
           </table>
         </div>
 
         <div className="p-sm border-t border-outline-variant bg-[#F8FAFC] flex items-center justify-between">
-          <span className="font-body-sm text-body-sm text-on-surface-variant">Showing <span className="font-semibold text-on-surface">1</span> to <span className="font-semibold text-on-surface">{vendors.length}</span> of <span className="font-semibold text-on-surface">{vendors.length}</span> vendors</span>
+          <span className="font-body-sm text-body-sm text-on-surface-variant">
+            {filteredVendors.length === 0
+              ? 'Showing 0 entries'
+              : <>Showing <span className="font-semibold text-on-surface">{(currentPage - 1) * ROWS_PER_PAGE + 1}</span> to <span className="font-semibold text-on-surface">{Math.min(currentPage * ROWS_PER_PAGE, filteredVendors.length)}</span> of <span className="font-semibold text-on-surface">{filteredVendors.length}</span> vendors</>}
+          </span>
           <div className="flex items-center gap-xs">
-            <button className="p-1 rounded text-on-surface-variant hover:bg-surface-container-high border border-outline-variant disabled:opacity-50" disabled>
+            <button
+              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+              disabled={currentPage === 1}
+              className="p-1 rounded text-on-surface-variant hover:bg-surface-container-high border border-outline-variant disabled:opacity-50 disabled:cursor-not-allowed"
+              aria-label="Previous page"
+            >
               <ChevronLeft className="h-4 w-4" />
             </button>
-            <button className="px-2 py-1 rounded text-sm font-semibold bg-secondary text-on-secondary">1</button>
-            <button className="px-2 py-1 rounded text-sm font-medium text-on-surface-variant hover:bg-surface-container-high">2</button>
-            <button className="px-2 py-1 rounded text-sm font-medium text-on-surface-variant hover:bg-surface-container-high">3</button>
-            <span className="text-on-surface-variant">...</span>
-            <button className="px-2 py-1 rounded text-sm font-medium text-on-surface-variant hover:bg-surface-container-high">250</button>
-            <button className="p-1 rounded text-on-surface-variant hover:bg-surface-container-high border border-outline-variant">
+            <span className="font-body-sm text-body-sm text-on-surface px-2">
+              Page {currentPage} of {totalPages}
+            </span>
+            <button
+              onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+              disabled={currentPage === totalPages}
+              className="p-1 rounded text-on-surface-variant hover:bg-surface-container-high border border-outline-variant disabled:opacity-50 disabled:cursor-not-allowed"
+              aria-label="Next page"
+            >
               <ChevronRight className="h-4 w-4" />
             </button>
           </div>

@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { ShieldAlert, ShieldCheck, FileWarning, Eye, Edit2, Download, Search, Filter } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { ShieldAlert, ShieldCheck, FileWarning, Eye, Edit2, Download, Search, Filter, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useVendors } from '../contexts/VendorContext';
 import { Vendor } from '../types';
 import { VendorModal } from '../components/VendorModal';
@@ -10,6 +10,8 @@ export function Compliance() {
   const [viewMode, setViewMode] = useState<'view' | 'edit'>('view');
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState<'All' | 'Compliant' | 'Non-Compliant'>('All');
+  const [currentPage, setCurrentPage] = useState(1);
+  const ROWS_PER_PAGE = 10;
 
   const compliantVendorsCount = vendors.filter(v => !v.error).length;
   const nonCompliantVendorsCount = vendors.filter(v => v.error).length;
@@ -28,6 +30,16 @@ export function Compliance() {
     if (filterStatus === 'Non-Compliant') return matchesSearch && vendor.error;
     return matchesSearch;
   });
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, filterStatus]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredVendors.length / ROWS_PER_PAGE));
+  const paginatedVendors = filteredVendors.slice(
+    (currentPage - 1) * ROWS_PER_PAGE,
+    currentPage * ROWS_PER_PAGE
+  );
 
   return (
     <div className="flex flex-col gap-lg pb-xl">
@@ -134,7 +146,7 @@ export function Compliance() {
                   <td colSpan={8} className="p-md text-center text-on-surface-variant">No vendors found.</td>
                 </tr>
               ) : (
-                filteredVendors.map((vendor, index) => (
+                paginatedVendors.map((vendor, index) => (
                   <tr key={index} className="hover:bg-surface-container-low transition-colors group">
                     <td className="p-md text-primary">{vendor.name}</td>
                     <td className="p-md">{vendor.category}</td>
@@ -180,7 +192,32 @@ export function Compliance() {
           </table>
         </div>
         <div className="p-md border-t border-outline-variant flex flex-col sm:flex-row justify-between items-center gap-md bg-surface-bright text-on-surface-variant font-body-sm text-body-sm">
-          <span>Showing {filteredVendors.length} entries</span>
+          <span>
+            {filteredVendors.length === 0
+              ? 'Showing 0 entries'
+              : `Showing ${(currentPage - 1) * ROWS_PER_PAGE + 1}-${Math.min(currentPage * ROWS_PER_PAGE, filteredVendors.length)} of ${filteredVendors.length} entries`}
+          </span>
+          <div className="flex items-center gap-sm">
+            <button
+              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+              disabled={currentPage === 1}
+              className="p-1.5 border border-outline-variant rounded-lg hover:bg-surface-container-low transition-colors disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent"
+              aria-label="Previous page"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </button>
+            <span className="font-body-sm text-body-sm text-on-surface">
+              Page {currentPage} of {totalPages}
+            </span>
+            <button
+              onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+              disabled={currentPage === totalPages}
+              className="p-1.5 border border-outline-variant rounded-lg hover:bg-surface-container-low transition-colors disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent"
+              aria-label="Next page"
+            >
+              <ChevronRight className="h-4 w-4" />
+            </button>
+          </div>
         </div>
       </div>
 
