@@ -78,7 +78,15 @@ export function Sidebar({ currentView, onViewChange, isOpen, onClose, onNewRequi
 
       {/* Footer Links */}
       <div className="mt-auto flex flex-col gap-xs pt-md border-t border-outline-variant">
-        <button className="flex items-center gap-sm px-md py-sm rounded-lg text-on-surface-variant hover:bg-surface-container-low transition-all group duration-200 w-full text-left">
+        <button
+          onClick={() => onViewChange('userGuide')}
+          className={cn(
+            "flex items-center gap-sm px-md py-sm rounded-lg transition-all group duration-200 w-full text-left",
+            currentView === 'userGuide'
+              ? "bg-secondary-fixed text-on-secondary-fixed font-semibold"
+              : "text-on-surface-variant hover:bg-surface-container-low"
+          )}
+        >
           <HelpCircle className="h-5 w-5 group-hover:translate-x-1 duration-200" />
           <span className="font-body-md text-body-md">Support</span>
         </button>

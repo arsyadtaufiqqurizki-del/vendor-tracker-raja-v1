@@ -8,6 +8,7 @@ import { ProspectiveVendors } from './views/ProspectiveVendors';
 import { Compliance } from './views/Compliance';
 import { RequestForm } from './views/RequestForm';
 import { Settings } from './views/Settings';
+import { UserGuide } from './views/UserGuide';
 import { Login } from './views/Login';
 import { ViewType, Vendor } from './types';
 import { VendorProvider, useVendors } from './contexts/VendorContext';
@@ -65,6 +66,8 @@ function AppContent() {
         return <RequestForm />;
       case 'settings':
         return <Settings userEmail={session.user.email} onLogout={() => supabase.auth.signOut()} onNavigate={setCurrentView} />;
+      case 'userGuide':
+        return <UserGuide />;
       default:
         return <Dashboard />;
     }
@@ -78,6 +81,7 @@ function AppContent() {
       case 'compliance': return 'Compliance';
       case 'requestForm': return 'Request Form';
       case 'settings': return 'Settings';
+      case 'userGuide': return 'Panduan Pengguna';
     }
   };
 

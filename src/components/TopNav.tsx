@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Search, Settings, Menu, LogOut } from 'lucide-react';
+import { Settings, Menu, LogOut } from 'lucide-react';
 import { NotificationDropdown } from './NotificationDropdown';
 import { ViewType } from '../types';
 
@@ -42,20 +42,6 @@ export function TopNav({ title, onMenuClick, userEmail, onLogout, onNavigate }: 
 
       <div className="hidden md:flex items-center gap-md">
         <h1 className="font-headline-md text-headline-md font-bold text-primary">{title}</h1>
-      </div>
-
-      {/* Search Bar */}
-      <div className="hidden md:flex flex-1 max-w-md mx-lg">
-        <div className="relative w-full">
-          <div className="absolute inset-y-0 left-0 pl-sm flex items-center pointer-events-none">
-            <Search className="text-on-surface-variant h-4 w-4" />
-          </div>
-          <input
-            type="text"
-            className="block w-full pl-xl pr-sm py-xs border border-transparent rounded-full bg-surface-container-low text-on-surface font-body-sm text-body-sm focus:ring-1 focus:ring-secondary focus:border-secondary focus:bg-surface-container-lowest transition-colors outline-none placeholder-on-surface-variant"
-            placeholder="Search across enterprise..."
-          />
-        </div>
       </div>
 
       {/* Trailing Actions & Profile */}
